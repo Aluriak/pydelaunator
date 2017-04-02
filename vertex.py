@@ -17,6 +17,11 @@ class Vertex:
     def surrounding_faces(self) -> iter:
         """Yield Face with self as vertex"""
         yield from (edge.left_face for edge in self.outgoing_edges)
+    @property
+    def surrounding_edges(self) -> iter:
+        """Yield edges that surround self (but do not collide with)"""
+        yield from (edge.next_left_edge for edge in self.outgoing_edges)
+
 
 
     @property
