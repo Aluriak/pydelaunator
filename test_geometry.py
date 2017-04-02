@@ -109,3 +109,9 @@ def test_segment_cross_segment_4():
     assert segment_collides_line(*points) == 2
     assert     segment_collides_segment(*points)
     assert not segment_crosses_segment(*points)
+
+def test_segment_cross_segment_5():
+    points = (262, 542), (263, 541), (503, 488), (0, 600)
+    assert segment_collides_line(*points) == 1
+    assert     segment_collides_segment(*points)
+    assert     segment_crosses_segment(*points)
