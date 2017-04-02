@@ -9,6 +9,7 @@ following the habitual mathematical conventions.
 """
 
 
+from math import sqrt
 from commons import sliding
 
 EPSILON = 0.01
@@ -30,7 +31,10 @@ def square_distance_between_segment_and_point(x1, y1, x2, y2, x, y) -> float:
         return p_p1_squareLength - dotProduct * dotProduct * p1_p2_square_dist
     return (x - x2)*(x - x2) + (y - y2)*(y - y2)
 
-def square_distance_between_points(ax, ay, bx, by) -> float:
+def distance_between_points(ax, ay, bx, by) -> float:
+    return sqrt(square_distance_between_points(ax, ay, bx, by))
+
+def square_distance_between_points(ax, ay, bx, by) -> int:
     return (ax - bx) ** 2 + (ay - by) ** 2
 
 def point_in_circumcircle_of(v1:tuple, v2:tuple, v3:tuple, point:tuple) -> bool:
