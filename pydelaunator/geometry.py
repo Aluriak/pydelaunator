@@ -10,7 +10,7 @@ following the habitual mathematical conventions.
 
 
 from math import sqrt
-from commons import sliding
+from pydelaunator.commons import sliding
 
 EPSILON = 0.01
 

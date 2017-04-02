@@ -1,9 +1,8 @@
 
 
-import navigation
-from mesh import Mesh
-from vertex import Vertex
-from commons import logger
+from pydelaunator import navigation
+from pydelaunator import Mesh, Vertex
+from pydelaunator.commons import logger
 
 
 class Placer:

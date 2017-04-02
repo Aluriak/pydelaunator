@@ -1,4 +1,4 @@
-import geometry
+from pydelaunator import geometry
 
 
 class Edge:

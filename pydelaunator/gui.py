@@ -2,27 +2,28 @@
 
 Commands:
     ESC: quit
-    ESPACE or ENTER: add a Point at mouse position
-    DELETE: remove Point at mouse position
-    drag&drop: on Point for move it
-    a: toggle auto-adding of Point
+    ESPACE or ENTER: add a point at mouse position
+    DELETE: remove point at mouse position
+    drag&drop: point to move it
+    a: toggle auto-adding points
     t: toggle random moving
     s: take a snapshot of all points positions
-    ARROWS: movement of 500 px on dragged Point [NOT IMPLEMENTED]
 
 """
 
 
-from pydelaunator    import Mesh
-from random          import randint, choice
-from pyglet.window   import key
-from pyglet.window   import mouse
+import sys
+import math
+import time
 import itertools
 import functools
+from random          import randint, choice
+
 import pyglet
-import time
-import math
-import sys
+from pyglet.window   import key
+from pyglet.window   import mouse
+
+from pydelaunator    import Mesh
 
 
 INTERFACE_TIME_SPEED    = 0.01

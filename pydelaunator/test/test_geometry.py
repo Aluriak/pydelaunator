@@ -3,7 +3,7 @@
 import math
 import pytest
 import itertools
-from geometry import *
+from pydelaunator.geometry import *
 
 
 def test_distance_between_points():

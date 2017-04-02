@@ -6,8 +6,8 @@ import itertools
 from math import inf
 from operator import itemgetter
 from collections import deque
-from geometry import distance_between_points
-from vertex import Vertex
+from pydelaunator import Vertex
+from pydelaunator.geometry import distance_between_points
 
 
 def neighbors(vertex:Vertex, max_dist:float=inf, min_dist:float=0.) -> iter:

@@ -2,7 +2,7 @@
 
 import random
 import pytest
-from placer import Placer
+from pydelaunator import Placer
 
 
 class MockData:

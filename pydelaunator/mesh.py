@@ -5,12 +5,9 @@
 import random
 import itertools
 
-import commons
-import geometry
-from edge import Edge
-from face import Face
-from vertex import Vertex
-from commons import logger
+from pydelaunator import geometry, commons
+from pydelaunator import Vertex, Edge, Face
+from pydelaunator.commons import logger
 
 
 INTEGRITY_TESTS = True
