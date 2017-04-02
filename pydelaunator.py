@@ -7,6 +7,10 @@ import geometry
 from edge import Edge
 from face import Face
 from vertex import Vertex
+from commons import logger
+
+
+INTEGRITY_TESTS = True
 
 
 class Mesh:
@@ -88,10 +92,12 @@ class Mesh:
         assert edges[br, ul].left_face == edges[ur, br].left_face
         # Keep track of all edges
         self._edges = set(edges.values())
+        logger.info("Mesh initiated.")
 
 
     def _integrity_tests(self, aggressive=True):
         """Raise AssertionError on any inconsistency in the graph"""
+        if not INTEGRITY_TESTS:  return
         for edge in self.edges:
             opps = edge.opposite_edge
             # print('\nFKCTZV:')
@@ -139,12 +145,28 @@ class Mesh:
                     assert (tar, ori) in edge_map
                     one, two = edge_map[ori, tar], edge_map[tar, ori]
                     assert one.opposite_edge == two
+        logger.info("Mesh aggressive integrity test ran with success.")
 
-    def add(self, obj, x, y):
-        """Add given object at given position"""
-        obj = Vertex(x, y, payload=obj)
+    def add(self, obj:object or Vertex, x:int, y:int):
+        """Add given object at given position.
+
+        obj -- the object to associate with the given position
+        x, y -- position of the object in the mesh
+
+        If obj is a Vertex instance, it will use it instead of
+        creating a new Vertex.
+        This parameter is used in very particular cases, like `Mesh.move`.
+
+        """
+        x, y = self.corrected_position(x, y)
+        obj = obj if isinstance(obj, Vertex) else Vertex(x, y, payload=obj)
+        obj.position = (x, y)
+        assert isinstance(obj, Vertex)
+        logger.info("Mesh will add a new Vertex at ({};{}) containing {}.".format(x, y, obj.payload))
+
         face_or_edge_or_vertex = self.object_covering(x, y)
         if isinstance(face_or_edge_or_vertex, Face):
+            logger.info("({};{}) is on face {}.".format(x, y, face_or_edge_or_vertex))
             face = face_or_edge_or_vertex
             # A B and C are the three surrounding vertices.
             # I is the one to be added.
@@ -177,6 +199,7 @@ class Mesh:
             self._apply_delaunay_condition(ai.left_face)
 
         elif isinstance(face_or_edge_or_vertex, Edge):
+            logger.info("({};{}) is on edge {}.".format(x, y, face_or_edge_or_vertex))
             # A B C and D are the four surrounding vertices.
             # I is the one to be added.
             ca = face_or_edge_or_vertex
@@ -230,12 +253,14 @@ class Mesh:
             self._apply_delaunay_condition(da.left_face)
 
         elif isinstance(face_or_edge_or_vertex, Vertex):
+            logger.info("({};{}) is on vertex {}.".format(x, y, face_or_edge_or_vertex))
             vertex = face_or_edge_or_vertex
             raise NotImplementedError("Adding on vertex is not implemented.")
         else:
-            raise ValueError("Mesh.object_covering returns an unexpected value"
+            raise ValueError("Mesh.object_covering returned an unexpected value"
                              " {}.".format(face_or_edge_or_vertex))
-        self._integrity_tests()
+        self._integrity_tests(aggressive=True)
+        logger.info("Object {} added with success.".format(obj))
         return obj
 
     def object_covering(self, x, y) -> Face or Edge or Vertex:
@@ -250,12 +275,14 @@ class Mesh:
 
         """
         assert self.collide_at(x, y)
+        logger.info("Search for cover of ({};{}).".format(x, y))
         counter_left = 0  # when hit 3, it's because we are turning around it
         import random
         current_edge = random.choice(tuple(self.edges))
         while current_edge in self.outside_objects:
             current_edge = random.choice(tuple(self.edges))
         # current_edge = next(iter(self.edges))  # could probably be choosen more efficiently
+        logger.info("Starting edge : {}.".format(current_edge))
         target = x, y
 
 
@@ -458,6 +485,9 @@ class Mesh:
             raise ValueError("Given vertex is one of the corners.".format(del_vertex))
         # Creat some container
         modified_faces = set()  # faces that can break Delaunay condition
+        assert del_vertex.edge
+        assert self.collide_at(*del_vertex.position)
+        logger.info("Mesh will remove {} ({} neighbors).".format(del_vertex, len(tuple(del_vertex.direct_neighbors))))
 
         # Collect references to neighbors (both edge and vertex)
 
@@ -468,27 +498,25 @@ class Mesh:
         # Applying this modification, delaunay condition is broken,
         #  so we need to track the faces to verify after the removal. (modified_faces)
         nei_edge = tuple(del_vertex.outgoing_edges)
-        prev_size = 0  # last number of neighbors
-        while prev_size != len(nei_edge) and len(nei_edge) > 4:
-            print('NEIGHBORS ({}):'.format(len(nei_edge)), nei_edge)
-            prev_size = len(nei_edge)
+        while len(nei_edge) > 4:
+            print('EUZNFE: NEIGHBORS ({}):'.format(len(nei_edge)), nei_edge)
             # For each triplet of neighbor, try to lost the middle one
-            for eone, etwo, etee in commons.sliding(itertools.cycle(tuple(nei_edge)), by=3):
+            for eone, etwo, etee in commons.sliding(itertools.cycle(tuple(nei_edge)), size=3):
                 one, two, tee = eone.target_vertex, etwo.target_vertex, etee.target_vertex
                 if geometry.segment_crosses_segment(one.pos, tee.pos, del_vertex.pos, two.pos):
                     # del_vertex will lose neighbor two if we flip etwo.
-                    print('DISCARDED:', two)
                     self._flip_edge(etwo)
                     modified_faces |= {etwo.left_face, etwo.right_face}
                     # update the sets of neighbors
                     nei_edge = tuple(del_vertex.outgoing_edges)
+                    logger.info("Mesh discards vertex {} by flipping edge {} ({} neighbors).".format(two, etwo, len(nei_edge)))
                     break
         assert len(nei_edge) in {3, 4}
 
 
     # DELETE POINT FROM TRIANGLE CONTAINER
+        logger.info("Mesh will remove vertex {} ({} neighbors).".format(del_vertex, len(nei_edge)))
         if len(nei_edge) == 3:
-
             # edges to delete
             ia = del_vertex.edge
             ib = ia.rot_right_edge
