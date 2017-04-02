@@ -180,9 +180,6 @@ def on_draw():
     global dt, mouse_position, dragged_point
     window.clear()
     _draw_edges()
-    # print number of objects in stdout
-    print('\r', sum(1 for _ in dt), end='')
-    sys.stdout.flush() # print even if line is not finish
 
 
 
