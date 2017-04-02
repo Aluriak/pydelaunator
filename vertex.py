@@ -30,6 +30,9 @@ class Vertex:
     @property
     def position(self):
         return tuple(self._pos)
+    @position.setter
+    def position(self, new_pos:tuple):
+        self._pos = None if new_pos is None else tuple(new_pos)
     @property
     def edge(self):
         return self._edge
