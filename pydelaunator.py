@@ -45,8 +45,8 @@ class Mesh:
         edges = dict()
 
         # Create the two outside triangles
-        outulbr = edges[ul, br] = Edge(ul, br)
-        outbrul = edges[br, ul] = Edge(br, ul)
+        outulbr = edges[ul, br] = Edge(ul, br, constrained=True)
+        outbrul = edges[br, ul] = Edge(br, ul, constrained=True)
         outulbr.opposite_edge = outbrul
         outbrul.left_face = Face(outbrul)
         outulbr.left_face = Face(outulbr)
@@ -55,16 +55,16 @@ class Mesh:
         # Create the two internal triangles and the two outsiders
         triangles = (
             # internal layout
-            ((ul, bl), (bl, ur), (ur, ul)),
-            ((bl, br), (br, ur), (ur, bl)),
+            ((ul, bl), (bl, ur), (ur, ul), False),
+            ((bl, br), (br, ur), (ur, bl), False),
             # outside
-            ((br, ul), (ul, ur), (ur, br)),
-            ((ul, br), (br, bl), (bl, ul)),
+            ((br, ul), (ul, ur), (ur, br), True),
+            ((ul, br), (br, bl), (bl, ul), True),
         )
-        for pone, ptwo, ptee in triangles:
-            one = edges[pone] = edges.get(pone, Edge(*pone))
-            two = edges[ptwo] = edges.get(ptwo, Edge(*ptwo))
-            tee = edges[ptee] = edges.get(ptee, Edge(*ptee))
+        for pone, ptwo, ptee, constrained in triangles:
+            one = edges[pone] = edges.get(pone, Edge(*pone, constrained=constrained))
+            two = edges[ptwo] = edges.get(ptwo, Edge(*ptwo, constrained=constrained))
+            tee = edges[ptee] = edges.get(ptee, Edge(*ptee, constrained=constrained))
             one.next_left_edge = two
             two.next_left_edge = tee
             tee.next_left_edge = one
@@ -114,7 +114,14 @@ class Mesh:
             assert face == edge.next_left_edge.left_face
             assert face == edge.next_left_edge.next_left_edge.left_face
         for vertex in self.vertices:
-            assert vertex.edge.origin_vertex == vertex
+            if vertex.edge.origin_vertex != vertex:
+                print()
+                print('VERTEX:', vertex)
+                print('VERTEX EDGE:', vertex.edge)
+                print('VERTEX EDGE ORIGIN:', vertex.edge.origin_vertex)
+                assert vertex.edge.origin_vertex == vertex
+            for edge in vertex.surrounding_edges:
+                assert not geometry.point_collide_segment(*vertex, *edge.origin_vertex, *edge.target_vertex)
             assert vertex.edge is not None
 
         if not aggressive:
@@ -124,14 +131,18 @@ class Mesh:
         #  it will allow more powerful integrity_tests
         edge_map = {}  # {position origin, position target: edge}
         for edge in self.edges:
-            # print()
             ori, tar = edge.origin_vertex.pos, edge.target_vertex.pos
-            # print(ori, tar, str(edge))
             assert (ori, tar) not in edge_map
             edge_map[ori, tar] = edge
+
+        # edge_map = {}  # {position origin, position target: edge}
+        # for edge in self.edges:
+            # print()
+            # ori, tar = edge.origin_vertex.pos, edge.target_vertex.pos
             # if (ori, tar) not in edge_map:
                 # edge_map[ori, tar] = edge
             # else:
+                # print('NTNEWN:', ori, tar, str(edge))
                 # print("There is multiple {}->{} edges.".format(ori, tar))
                 # edge_map[ori, tar] = (edge_map[ori, tar], edge)
         # from pprint import pprint
@@ -293,12 +304,10 @@ class Mesh:
             return edge
 
         while True:
-            print()
-            print('TARGET :', target)
-            print('CURRENT:', current_edge)
+            # print()
             assert current_edge not in self.outside_objects
             if current_edge.coordOnTheLeft(target):
-                print(*target, *current_edge.origin_vertex.pos, *current_edge.target_vertex.pos)
+                # print(*target, *current_edge.origin_vertex.pos, *current_edge.target_vertex.pos)
                 if geometry.point_collide_segment(*target, *current_edge.origin_vertex.pos, *current_edge.target_vertex.pos):
                     if geometry.point_collide_point(*target, *current_edge.origin_vertex.pos):
                         return current_edge.origin_vertex
@@ -306,7 +315,6 @@ class Mesh:
                         return current_edge.target_vertex
                     return current_edge
                 counter_left += 1
-                print('MSSDDU: find on left (', counter_left, 'times )')
                 # churn until be on the left of target,
                 current_edge = current_edge.rot_left_edge
                 while current_edge.coordOnTheStrictLeft(target):
@@ -315,13 +323,11 @@ class Mesh:
                 current_edge = non_outside(current_edge.rot_right_edge, 'rot_right_edge')
             else:  # target is on the right
                 counter_left = 0
-                print('MSSDDU: find on right')
                 while current_edge.coordOnTheStrictRight(target) and current_edge not in self.outside_objects:
                     current_edge = non_outside(current_edge.rot_right_edge, 'rot_right_edge')
                 # Churn to left for keep target to the left.
                 current_edge = non_outside(current_edge.rot_left_edge)
 
-            print('END    :', current_edge)
             current_edge = non_outside(current_edge.next_left_edge)
             if counter_left >= 3:  # we are turning around it
                 return current_edge.left_face
@@ -335,34 +341,44 @@ class Mesh:
                 yield vertex
 
 
-    def _apply_delaunay_condition(self, face:Face) -> bool:
+    def _apply_delaunay_condition(self, face:Face, *, processed:set=None) -> set:
         """Modify self internals to respect the delaunay condition.
 
+        Return all the faces that have been treated.
         Delaunator: Triangulation::applyDelaunayCondition
 
         """
         assert face is not None and face.edge is not None
+        processed = processed or set()
+        if face in processed or face in self.outside_objects:
+            processed.add(face)
+            return processed
+        processed.add(face)
         # INITIALIZATION
         illegal_edge = None;  # illegal edge that relie the illegal vertex and the face's vertex.
         # to restore the delaunay condition, flip the illegal edge
+        logger.info("Delaunay condition will be apply on {}.".format(face))
 
         # CONDITION: we care
         if face in self.outside_objects:
-            return False
+            return processed
         # Get a neighbor that breaks the delaunay condition
         for edge in face.surrounding_edges:
+            if edge.constrained:  continue
             if face.circumcircle_contain_position(edge.next_right_edge.target_vertex):
                 illegal_edge = edge
                 break
         else:  # no illegal edge found
-            return False
+            return processed
 
         # MODIFICATION OF FACES
         # restore delaunay condition and verify those that are around
         self._flip_edge(illegal_edge)
-        self._apply_delaunay_condition(illegal_edge.left_face)
-        self._apply_delaunay_condition(illegal_edge.right_face)
-        return True
+        processed |= self._apply_delaunay_condition(illegal_edge.right_face,
+                                                    processed=processed)
+        processed |= self._apply_delaunay_condition(illegal_edge.left_face,
+                                                    processed=processed)
+        return processed
 
 
     def _flip_edge(self, illegal_edge1):
@@ -371,8 +387,15 @@ class Mesh:
         Delaunator: Triangulation::operateFlip
 
         """
+        if illegal_edge1 in self.outside_objects:
+            print('EVQWSD: TRIED TO FLIP AN OUTSIDE EDGE — abort !')
+            input('<ok>')
+            return
+        if illegal_edge1.constrained:
+            assert illegal_edge1.opposite_edge.constrained
+            logger.info("Constraigned Edge {} was not flipped.".format(illegal_edge1))
+            return
         assert illegal_edge1 not in self.outside_objects
-        print('FLIP:', illegal_edge1)
         # SHORTCUTS
         illegal_edge2 = illegal_edge1.opposite_edge
         illegal_vertex1 = illegal_edge1.next_left_edge.target_vertex
@@ -432,18 +455,20 @@ class Mesh:
         edge2_prev.left_face = face2
 
         # TESTS
-        assert illegal_edge1.origin_vertex == illegal_vertex1
-        assert illegal_edge1.next_left_edge == illegal_edge2.next_right_edge.next_right_edge.opposite_edge
-        assert illegal_edge1.next_left_edge.next_left_edge.next_left_edge == illegal_edge1
-        assert illegal_edge1.left_face == face1
-        assert illegal_edge1.next_left_edge.left_face == face1
-        assert illegal_edge1.next_left_edge.next_left_edge.left_face == face1
+        assert illegal_edge1.origin_vertex is illegal_vertex1
+        assert illegal_edge1.origin_vertex.edge.origin_vertex is illegal_edge1.origin_vertex
+        assert illegal_edge1.next_left_edge is illegal_edge2.next_right_edge.next_right_edge.opposite_edge
+        assert illegal_edge1.next_left_edge.next_left_edge.next_left_edge is illegal_edge1
+        assert illegal_edge1.left_face is face1
+        assert illegal_edge1.next_left_edge.left_face is face1
+        assert illegal_edge1.next_left_edge.next_left_edge.left_face is face1
 
-        assert illegal_edge2.target_vertex == illegal_vertex1
-        assert illegal_edge2.next_left_edge.next_left_edge.next_left_edge == illegal_edge2
-        assert illegal_edge2.left_face == face2
-        assert illegal_edge2.next_left_edge.left_face == face2
-        assert illegal_edge2.next_left_edge.next_left_edge.left_face == face2
+        assert illegal_edge2.target_vertex is illegal_vertex1
+        assert illegal_edge2.next_left_edge.next_left_edge.next_left_edge is illegal_edge2
+        assert illegal_edge2.left_face is face2
+        assert illegal_edge2.next_left_edge.left_face is face2
+        assert illegal_edge2.next_left_edge.next_left_edge.left_face is face2
+        logger.info("Edge {} was flipped.".format(str(illegal_edge1)))
         self._integrity_tests()
 
 
@@ -531,6 +556,8 @@ class Mesh:
 
             # 2 faces must be deleted, f1 remain
             f1, f2, f3 = ia.left_face, ib.left_face, ic.left_face
+            modified_faces.add(f1)
+            modified_faces -= {f2, f3}
 
             assert len(set((ia, ib, ic))) == 3  # uniques
             assert len(set((f1, f2, f3))) == 3  # uniques
@@ -549,9 +576,9 @@ class Mesh:
             # delete the edges, update the Mesh
             todel = {ia, ib, ic, ai, bi, ci}
             self._edges -= todel
+            assert all(not e.constrained for e in todel)
             map(Edge.nullify, todel)
             self._vertices.remove(del_vertex)
-            modified_faces.add(f1)
 
 
     # DELETE POINT FROM SQUARE CONTAINER
@@ -567,16 +594,18 @@ class Mesh:
             ci = ic.opposite_edge
             di = id.opposite_edge
 
-            # the faces to delete
+            # faces to delete
             f1, f2 = ia.left_face, ia.right_face
-            # the faces to keep
+            modified_faces -= {f1, f2}
+            # faces to keep
             f3, f4 = ic.left_face, ic.right_face
+            modified_faces |= {f3, f4}
 
             # edges to modify
             ad = ia.next_left_edge
-            dc = ad.next_left_edge
-            cb = ci.rot_right_edge
-            ba = bi.rot_right_edge
+            dc = id.next_left_edge
+            cb = ic.next_left_edge
+            ba = ib.next_left_edge
 
             a = ia.target_vertex
             b = ib.target_vertex
@@ -623,15 +652,76 @@ class Mesh:
             # update the Mesh itself
             todel = {ia, ai, ib, bi, id, di}
             self._edges -= todel
+            assert all(not e.constrained for e in todel)
             map(Edge.nullify, todel)
             self._vertices.remove(del_vertex)
-            modified_faces |= {f3, f4}
 
     # RESTORE DELAUNAY CONDITION
         # Delaunay condition was break. It's time to restore it.
+        logger.info("Mesh will restaure the delaunay condition for {} candidate faces.".format(len(modified_faces)))
         for face in modified_faces:
             self._apply_delaunay_condition(face)
         self._integrity_tests(aggressive=True)
+        return del_vertex.payload
+
+
+    def move(self, mov_vertex, dx, dy):
+        """Move given given vertex in graph of given delta position.
+
+        Raise a ValueError if given vertex is not in the graph.
+
+        """
+        if mov_vertex not in self.vertices:
+            raise ValueError("Given vertex '{}' is not in this graph.".format(mov_vertex))
+        if mov_vertex in self.corners:
+            raise ValueError("Given vertex is one of the corners.".format(mov_vertex))
+
+        target = self.corrected_position(mov_vertex.pos[0] + dx,
+                                         mov_vertex.pos[1] + dy)
+        logger.info("Mesh will move Vertex {} to position ({},{}).".format(mov_vertex, *target))
+        # search for problems
+        for edge in mov_vertex.surrounding_edges:
+            right_vertex = edge.origin_vertex
+            left_vertex = edge.target_vertex
+            assert right_vertex is not left_vertex
+            assert mov_vertex is not right_vertex
+            assert mov_vertex is not left_vertex
+            if geometry.segment_collides_segment(mov_vertex, target, left_vertex, right_vertex):
+                logger.info("Mesh will delete Vertex {} and add it to target "
+                            "position, because segment vertex/target [{} {}] "
+                            "collides with segment of neighbors [{} {}] (edge {})."
+                            "".format(mov_vertex, mov_vertex, target,
+                                      left_vertex, right_vertex, edge))
+                # collision with neighbors highly probable : delete and add the vertice
+                self.remove(mov_vertex)
+                mov_vertex.edge = None
+                mov_vertex.position = None
+                self.add(mov_vertex, *target)
+                assert mov_vertex.edge
+                break
+        else:  # no collision with neighbors
+            logger.info("Mesh will change Vertex {} position".format(mov_vertex))
+            mov_vertex.position = target
+            faces = set()
+            for face in tuple(mov_vertex.surrounding_faces):
+                faces |= self._apply_delaunay_condition(face, processed=faces)
+            assert mov_vertex.edge
+            self._integrity_tests()
+        logger.info("Vertex {} is now at position ({};{})".format(mov_vertex, *target))
+
+
+    def term_print(self):
+        """DEBUG"""
+        print('\n######################################################')
+        print('VERTICES:')
+        for v in self.vertices:
+            print('\t', v, v.edge, v.edge.next_left_edge)
+            if v.edge:
+                print('\t\t', *tuple(map(str, v.surrounding_faces)))
+        print('EDGES:')
+        for e in self.edges:
+            print(e, e.next_left_edge, e.left_face)
+        print('######################################################\n')
 
 
     def do_thing(self):
