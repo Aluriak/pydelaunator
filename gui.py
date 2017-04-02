@@ -55,7 +55,7 @@ PRINT_EDGES = True
 class Point:
     """Objects put in the triangulation"""
     def __init__(self, color=None):
-        self.color = color or tuple(randint(1, 255) for _ in range(4))
+        self.color = color or tuple([100 + randint(0, 155) for _ in range(3)] + [255])
 
 
 def screen_position_to_dt_position(pos:tuple) -> tuple:
@@ -135,6 +135,8 @@ def on_key_press(symbol, modifiers):
                 interval=INTERFACE_TIME_SPEED
             )
         auto_add = not auto_add
+    elif symbol == key.P:
+        dt.print()
     elif symbol in (key.M, key.T):
         _moveAllPoints()
     elif symbol in (key.S,):
@@ -195,7 +197,7 @@ def _draw_edges():
     if not PRINT_EDGES:
         return
 
-    color_green = (0, 255, 0, 255)
+    color_black = (0, 0, 0, 255)
     color_red   = (255, 0, 0, 255)
     diameter = 20
     for edge in dt.edges:
@@ -203,9 +205,13 @@ def _draw_edges():
         source, target = edge.origin_vertex, edge.target_vertex
         p1 = dt_position_to_screen_position(source.position)
         p2 = dt_position_to_screen_position(target.position)
-        source_color = color_red if source is dragged_point else getattr(source.payload, 'color', color_green)
-        target_color = color_red if target is dragged_point else getattr(target.payload, 'color', color_green)
-        print_edge((*p1, *p2), source_color + target_color)
+        if edge.constrained:
+            color = color_red + color_red
+        else:
+            source_color = color_red if source is dragged_point else getattr(source.payload, 'color', color_black)
+            target_color = color_red if target is dragged_point else getattr(target.payload, 'color', color_black)
+            color = source_color + target_color
+        print_edge((*p1, *p2), color)
 
 
 ################# POINT FUNCTIONS #################
@@ -218,10 +224,11 @@ def _addPointToDT(x=None, y=None):
     assert x is None or isinstance(x, int)
     assert y is None or isinstance(y, int)
     coords = x or randint(1, dt.width-1), y or randint(1, dt.height-1)
-    print(x, y)
-    print(coords)
-    print("Add point at ({};{})".format(*coords))
+    # print(x, y)
+    # print(coords)
+    # print("Add point at ({};{})".format(*coords))
     dt.add(Point(), *coords)
+    print('dt.add(Point(), {}, {})'.format(*coords))
 
 
 def _delPoint(point):
@@ -249,7 +256,19 @@ def _movePoint(x, y, p):
     """Add given values to (x;y) of given point"""
     global dt
     if p is not None:
-        dt.move(p, x, y)
+        try:
+            dt.move(p, x, y)
+            print('dt.move({}, {}, {})'.format(p, x, y))
+        except AssertionError as err:
+            import traceback
+            traceback.print_tb(err.__traceback__)
+            print(err)
+            print(dragged_point)
+            input('<get report>')
+            print(dt)
+            dt.term_print()
+            dt.print()
+
 
 
 def _moveAllPoints():
@@ -261,7 +280,7 @@ def _moveAllPoints():
             mx = choice([-eps,eps])
             my = choice([-eps,eps])
             if v is not dragged_point:
-                dt.move(v, (mx, my))
+                dt.move(v, *(mx, my))
 
 
 def _snapshot():
