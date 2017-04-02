@@ -126,6 +126,8 @@ def on_key_press(symbol, modifiers):
     if symbol == key.RETURN or symbol == key.SPACE: # add point
         if mouse_position is not None:
             _addPointToDT(*mouse_position)
+    elif symbol in (key.Q, key.ESCAPE):
+        window.close()
     elif symbol in (key.A, key.B):
         if auto_add:
             pyglet.clock.unschedule(schedulable_addPointToDT)
