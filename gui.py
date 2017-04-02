@@ -96,23 +96,23 @@ def start_gui(dt_object):
     # _addPointToDT(508, 253)
     # _addPointToDT(533, 52)
     # UNIT TEST 3
-    # _addPointToDT(91.0, 372.0)
-    # _addPointToDT(122.0, 309.0)
-    # _addPointToDT(118.0, 204.0)
-    # _addPointToDT(250.0, 575.0)
-    # _addPointToDT(312.0, 107.0)
-    # _addPointToDT(387.0, 204.0)
-    # _addPointToDT(506.0, 480.0)
-    # _addPointToDT(493.0, 216.0)
+    # _addPointToDT(91, 372)
+    # _addPointToDT(122, 309)
+    # _addPointToDT(118, 204)
+    # _addPointToDT(250, 575)
+    # _addPointToDT(312, 107)
+    # _addPointToDT(387, 204)
+    # _addPointToDT(506, 480)
+    # _addPointToDT(493, 216)
     # _addPointToDT(308, 373)
     # UNIT TEST 4
-    # _addPointToDT(75.0, 381.0)
-    # _addPointToDT(133.0, 192.0)
-    # _addPointToDT(249.0, 574.0)
-    # _addPointToDT(320.0, 107.0)
-    # _addPointToDT(503.0, 488.0)
-    # _addPointToDT(528.0, 209.0)
-    # _addPointToDT(465, 325) # deletion cause delaunay condition breaking
+    _addPointToDT(75, 381)
+    _addPointToDT(133, 192)
+    _addPointToDT(249, 574)
+    _addPointToDT(320, 107)
+    _addPointToDT(503, 488)
+    _addPointToDT(528, 209)
+    _addPointToDT(465, 325)
 
     # run pyglet printings
     pyglet.app.run()
@@ -268,17 +268,6 @@ def _snapshot():
         print('\t_addPointToDT' + str((c.x, c.y)))
 
 
-
-
-
-
-#########################
-# MAIN                  #
-#########################
 if __name__ == '__main__':
-
     dt = Mesh(*UNIVERSE_SIZE)
     start_gui(dt)
-
-
-
