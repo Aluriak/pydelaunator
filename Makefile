@@ -1,15 +1,16 @@
 
 
-p:
-	python placer.py
-
-m:
-	python mesh.py
-
 g:
-	python gui.py
+	python -m pydelaunator
 
 
 t: tests
 tests:
-	pytest . --doctest-module --ignore=venv/ --ignore=gui.py
+	pytest pydelaunator --doctest-module --ignore=venv/ --ignore=gui.py
+
+
+# Pypi related recipes
+upload:
+	python setup.py sdist upload
+install:
+	python -m pip install -U pydelaunator
