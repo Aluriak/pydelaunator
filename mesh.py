@@ -2,6 +2,7 @@
 
 """
 
+import random
 import itertools
 
 import commons
@@ -165,15 +166,20 @@ class Mesh:
                     assert one.opposite_edge == two
         logger.info("Mesh aggressive integrity test ran with success.")
 
-    def add(self, obj:object or Vertex, x:int, y:int):
+
+    def add(self, obj:object or Vertex, x:int, y:int, search_start:Edge=None):
         """Add given object at given position.
 
         obj -- the object to associate with the given position
         x, y -- position of the object in the mesh
+        search_start -- optional edge in the mesh to use as start point
 
         If obj is a Vertex instance, it will use it instead of
         creating a new Vertex.
         This parameter is used in very particular cases, like `Mesh.move`.
+
+        Raise a ValueError if given position is already dominated by an existing
+        vertice.
 
         """
         x, y = self.corrected_position(x, y)
@@ -182,7 +188,7 @@ class Mesh:
         assert isinstance(obj, Vertex)
         logger.info("Mesh will add a new Vertex at ({};{}) containing {}.".format(x, y, obj.payload))
 
-        face_or_edge_or_vertex = self.object_covering(x, y)
+        face_or_edge_or_vertex = self.object_covering(x, y, starting_edge=search_start)
         if isinstance(face_or_edge_or_vertex, Face):
             logger.info("({};{}) is on face {}.".format(x, y, face_or_edge_or_vertex))
             face = face_or_edge_or_vertex
@@ -273,20 +279,23 @@ class Mesh:
         elif isinstance(face_or_edge_or_vertex, Vertex):
             logger.info("({};{}) is on vertex {}.".format(x, y, face_or_edge_or_vertex))
             vertex = face_or_edge_or_vertex
-            raise NotImplementedError("Adding on vertex is not implemented.")
+            raise ValueError("Can't add a vertex on a vertex.")
         else:
-            raise ValueError("Mesh.object_covering returned an unexpected value"
-                             " {}.".format(face_or_edge_or_vertex))
+            raise TypeError("Mesh.object_covering returned an unexpected value"
+                            " {}.".format(face_or_edge_or_vertex))
         self._integrity_tests(aggressive=True)
         logger.info("Object {} added with success.".format(obj))
         return obj
 
-    def object_covering(self, x, y) -> Face or Edge or Vertex:
+
+    def object_covering(self, x, y, starting_edge:Edge=None) -> Face or Edge or Vertex:
         """Return the object describing the best given position.
 
         If position is one of a vertex, the vertex is returned.
         If position is on an edge, the edge is returned.
         Else, position is expected to be on a face, which is returned.
+
+        starting_edge -- optional edge to use as starting point for the search
 
         Delaunator: Triangulation::findContainerOf
         https://github.com/Aluriak/Delaunator/blob/master/delaunator/libdelaunator_src/triangulation.cpp#L905
@@ -295,8 +304,7 @@ class Mesh:
         assert self.collide_at(x, y)
         logger.info("Search for cover of ({};{}).".format(x, y))
         counter_left = 0  # when hit 3, it's because we are turning around it
-        import random
-        current_edge = random.choice(tuple(self.edges))
+        current_edge = starting_edge or random.choice(tuple(self.edges))
         while current_edge in self.outside_objects:
             current_edge = random.choice(tuple(self.edges))
         # current_edge = next(iter(self.edges))  # could probably be choosen more efficiently
@@ -694,16 +702,18 @@ class Mesh:
             assert mov_vertex is not right_vertex
             assert mov_vertex is not left_vertex
             if geometry.segment_collides_segment(mov_vertex, target, left_vertex, right_vertex):
+                # collision with neighbors highly probable : delete and add the vertice
                 logger.info("Mesh will delete Vertex {} and add it to target "
                             "position, because segment vertex/target [{} {}] "
                             "collides with segment of neighbors [{} {}] (edge {})."
                             "".format(mov_vertex, mov_vertex, target,
                                       left_vertex, right_vertex, edge))
-                # collision with neighbors highly probable : delete and add the vertice
+                # search for new emplacement by beginning around the old position
+                starting_point = mov_vertex.edge.next_left_edge
                 self.remove(mov_vertex)
                 mov_vertex.edge = None
                 mov_vertex.position = None
-                self.add(mov_vertex, *target)
+                self.add(mov_vertex, *target, search_start=starting_point)
                 assert mov_vertex.edge
                 break
         else:  # no collision with neighbors
