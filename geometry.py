@@ -194,7 +194,7 @@ def segment_collides_line(o, p, a, b) -> int:
     AO_x = Ox - Ax
     AO_y = Oy - Ay
     tmp = (AB_x*AP_y - AB_y*AP_x)*(AB_x*AO_y - AB_y*AO_x)
-    if(abs(tmp - 0.) < EPSILON):
+    if(abs(tmp) < EPSILON):
         return 2  # alignment
     elif(tmp < 0.):
         return 1  # cross but no alignement
