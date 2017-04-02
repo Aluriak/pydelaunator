@@ -78,7 +78,7 @@ def start_gui(dt_object):
     # for i in range(4):
         # _addPointToDT()
     # UNIT TEST 0
-    _addPointToDT(300, 300)
+    # _addPointToDT(300, 300)
     # UNIT TEST 1
     # _addPointToDT(200, 100)
     # _addPointToDT(100,   0)
