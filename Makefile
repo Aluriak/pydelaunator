@@ -1,7 +1,10 @@
 
 
-all:
+p:
 	python placer.py
+
+m:
+	python mesh.py
 
 g:
 	python gui.py
