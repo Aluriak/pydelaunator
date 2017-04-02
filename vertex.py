@@ -13,6 +13,10 @@ class Vertex:
     def direct_neighbors(self) -> iter:
         """Yield neighbors directly linked by an Edge"""
         yield from (edge.target_vertex for edge in self.outgoing_edges)
+    @property
+    def surrounding_faces(self) -> iter:
+        """Yield Face with self as vertex"""
+        yield from (edge.left_face for edge in self.outgoing_edges)
 
 
     @property
