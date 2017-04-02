@@ -24,6 +24,11 @@ def test_mesh_dim(mesh):
     assert mesh.corrected_position(0, 100) == (1, 99)
     assert mesh.corrected_position(50, 50) == (50, 50)
 
+def test_mesh_add(mesh):
+    mesh.add('one', 10, 10)
+    with pytest.raises(ValueError):
+        mesh.add('another at the same place', 10, 10)
+
 
 def test_mesh(mesh):
     assert len(mesh.edges) == 12
