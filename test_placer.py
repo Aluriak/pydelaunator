@@ -1,7 +1,7 @@
 
 
 import pytest
-import Placer
+from placer import Placer
 
 
 @pytest.fixture

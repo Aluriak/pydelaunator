@@ -1,7 +1,7 @@
 
 
 import pytest
-from pydelaunator import Mesh, Edge, Face, Vertex
+from mesh import Mesh, Edge, Face, Vertex
 
 
 @pytest.fixture

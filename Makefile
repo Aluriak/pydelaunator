@@ -1,7 +1,7 @@
 
 
 all:
-	python pydelaunator.py
+	python placer.py
 
 g:
 	python gui.py
