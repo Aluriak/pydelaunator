@@ -3,15 +3,16 @@ import geometry
 
 class Edge:
     __slots__ = ['_next_left_edge', '_origin_vertex', '_target_vertex',
-                 '_left_face', '_opposite_edge']
+                 '_left_face', '_opposite_edge', '_constrained']
 
     def __init__(self, origin_vertex, target_vertex, left_face=None,
-                 next_left_edge=None, opposite_edge=None):
+                 next_left_edge=None, opposite_edge=None, constrained:bool=False):
         self._next_left_edge = next_left_edge
         self._origin_vertex = origin_vertex
         self._target_vertex = target_vertex
         self._left_face = left_face
         self._opposite_edge = opposite_edge
+        self._constrained = bool(constrained)
 
 
     def nullify(self):
@@ -103,5 +104,10 @@ class Edge:
         opposite_edge._opposite_edge = self
         self._opposite_edge = opposite_edge
 
+    @property
+    def constrained(self) -> bool:
+        return self._constrained
+
     def __str__(self):
-        return "EDGE({}->{})".format(self.origin_vertex, self.target_vertex)
+        return "EDGE{}({}->{})".format(('!' if self.constrained else ''),
+                                       self.origin_vertex, self.target_vertex)
