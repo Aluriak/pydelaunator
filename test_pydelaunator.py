@@ -39,10 +39,6 @@ def test_mesh(mesh):
     assert len(mesh.edges) == 12
     assert len(mesh.corners) == 4
     assert len(mesh.vertices) == 4
-    # from pprint import pprint
-    # for edge in mesh.edges:
-        # print(str(edge).ljust(10), '->', str(edge.next_left_edge))
-    # assert False
 
 
 def test_remove():
