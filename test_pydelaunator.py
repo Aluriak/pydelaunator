@@ -20,6 +20,11 @@ def test_object_corvering(mesh):
     assert isinstance(vrtx, Vertex)
 
 
+def test_mesh_dim(mesh):
+    assert mesh.corrected_position(0, 100) == (1, 99)
+    assert mesh.corrected_position(50, 50) == (50, 50)
+
+
 def test_mesh(mesh):
     assert len(mesh.edges) == 12
     assert len(mesh.corners) == 4
@@ -38,6 +43,18 @@ def test_mesh(mesh):
     # for edge in mesh.edges:
         # print(str(edge).ljust(10), '->', str(edge.next_left_edge))
     # assert False
+
+
+def test_remove():
+    # reproduction of a weird case encountered while playing
+    mesh = Mesh(600, 600)
+    points = (75, 381), (133, 192), (320, 107), (503, 488), (528, 209), (465, 325)
+    for point in points:
+        mesh.add(str(point), *point)
+    todel = (251, 574)
+    vertex = mesh.add(str(todel), *todel)
+    mesh.move(vertex, 271, 540)  # just change the position
+    mesh.move(vertex, 271, 539)  # delete and replace it
 
 
 def test_neighbors(mesh):
