@@ -230,7 +230,10 @@ def _delPoint(point):
     if point is not None:
         if dragged_point == point:
             dragged_point = None
-        dt.remove(point)
+        try:
+            dt.remove(point)
+        except ValueError as err:
+            print(err)
 
 
 def _getPointAt(x, y):
@@ -246,7 +249,7 @@ def _movePoint(x, y, p):
     """Add given values to (x;y) of given point"""
     global dt
     if p is not None:
-        dt.move(p, (x, y))
+        dt.move(p, x, y)
 
 
 def _moveAllPoints():
