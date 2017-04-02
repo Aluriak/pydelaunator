@@ -26,6 +26,13 @@ class Mesh:
         """True if given position is valid"""
         return 0 <= x <= self.width and 0 <= y <= self.height
 
+    def corrected_position(self, x, y) -> tuple:
+        """Return given position if is valid, else another one which is"""
+        i = max(0+1, min(x, self.width-1))
+        j = max(0+1, min(y, self.height-1))
+        logger.info("Position ({};{}) corrected to ({};{}).".format(x, y, i, j))
+        return i, j
+
     def _init_space(self):
         # create the four corners
         ul, ur, bl, br = Vertex(0, 0), Vertex(self.width, 0), Vertex(0, self.height), Vertex(self.width, self.height)
