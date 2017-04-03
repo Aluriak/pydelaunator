@@ -108,7 +108,6 @@ def test_bug_1_variation_1(buggy_mesh_1):
     dt.move(tgt, -1, -1)
 
 def test_bug_1_variation_2(buggy_mesh_1):
-    # in this case, there is no problem
     dt, tgt = buggy_mesh_1
     with pytest.raises(AssertionError) as excinfo:
         dt.move(tgt, -6, -1)
