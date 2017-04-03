@@ -26,18 +26,19 @@ from pyglet.window   import mouse
 from pydelaunator    import Mesh
 
 
-INTERFACE_TIME_SPEED    = 0.01
-SIMULATION_FPS          = 10
-PROGRAM_NAME            = "Delaunator 0.1"
-MOUSE_PRECISION         = 400
-UNIVERSE_SIZE           = (600, 600)
-VIDEO_PADDING           = 50
-
-VIDEO_MODE_X            = UNIVERSE_SIZE[0] + VIDEO_PADDING*2
-VIDEO_MODE_Y            = UNIVERSE_SIZE[1] + VIDEO_PADDING*2
 
 
-def run():
+def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
+        speed:float=0.01, mouse_precision:int=400):
+    INTERFACE_TIME_SPEED    = float(speed)
+    SIMULATION_FPS          = int(fps)
+    MOUSE_PRECISION         = int(mouse_precision)
+    UNIVERSE_SIZE           = tuple(map(int, universe_size))
+    VIDEO_PADDING           = int(padding or 50)
+
+    VIDEO_MODE_X            = UNIVERSE_SIZE[0] + VIDEO_PADDING*2
+    VIDEO_MODE_Y            = UNIVERSE_SIZE[1] + VIDEO_PADDING*2
+    PROGRAM_NAME            = "Delaunator 0.1"
     """Quick and dirty encapsulation of all the gui codebase"""
     # states
     auto_add = False
