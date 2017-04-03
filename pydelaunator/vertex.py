@@ -39,7 +39,8 @@ class Vertex:
     @edge.setter
     def edge(self, edge):
         self._edge = edge
-        assert self._edge.origin_vertex == self
+        if edge is not None:
+            assert self._edge.origin_vertex == self
 
     @property
     def outgoing_edges(self):
