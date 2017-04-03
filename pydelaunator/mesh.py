@@ -120,6 +120,8 @@ class Mesh:
             assert face == edge.next_left_edge.left_face
             assert face == edge.next_left_edge.next_left_edge.left_face
         for vertex in self.vertices:
+            assert len(set(vertex.outgoing_edges)) == len(set(vertex.direct_neighbors))
+            assert len(set(vertex.direct_neighbors)) > 2
             if vertex.edge.origin_vertex != vertex:
                 print()
                 print('VERTEX:', vertex)
@@ -553,7 +555,7 @@ class Mesh:
 
 
     # DELETE POINT FROM TRIANGLE CONTAINER
-        logger.info("Mesh will remove vertex {} ({} neighbors).".format(del_vertex, len(nei_edge)))
+        logger.info("Mesh start removing {} ({} neighbors).".format(del_vertex, len(nei_edge)))
         if len(nei_edge) == 3:
             # edges to delete
             ia = del_vertex.edge
@@ -574,6 +576,7 @@ class Mesh:
 
             assert len(set((ia, ib, ic))) == 3  # uniques
             assert len(set((f1, f2, f3))) == 3  # uniques
+            assert len(set((ia.target_vertex, ib.target_vertex, ic.target_vertex))) == 3 # uniques
 
             # update the vertices
             ia.target_vertex.edge = ac
@@ -588,6 +591,7 @@ class Mesh:
 
             # delete the edges, update the Mesh
             todel = {ia, ib, ic, ai, bi, ci}
+            logger.info("Edges {} are removed and nullified.".format(';'.join(map(str, todel))))
             self._edges -= todel
             assert all(not e.constrained for e in todel)
             map(Edge.nullify, todel)
