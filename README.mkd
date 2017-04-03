@@ -15,6 +15,15 @@ Installation in one command, including dependancies:
     pip install pydelaunator
 
 
+## Usage
+The package run the GUI if launched directly:
+
+    python -m pydelaunator
+    
+Use `--help` for options.
+
+The higher-level API is the [Placer object](pydelaunator/placer.py). See [tests](pydelaunator/test/test_placer.py) for other usage examples.
+
 ## Notes
 ### Goals
 This work is mainly here to prototype a better API and detect where
