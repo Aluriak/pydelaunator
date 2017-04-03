@@ -32,7 +32,7 @@ def test_mesh_add(mesh):
 
 
 def test_mesh(mesh):
-    assert len(mesh.edges) == 12
+    assert len(mesh.edges) == 10
     assert len(mesh.corners) == 4
     assert len(mesh.vertices) == 4
     assert mesh.vertices == mesh.corners
@@ -42,7 +42,7 @@ def test_mesh(mesh):
     assert added in mesh.vertices
     assert added not in mesh.corners
     added = mesh.remove(added)
-    assert len(mesh.edges) == 12
+    assert len(mesh.edges) == 10
     assert len(mesh.corners) == 4
     assert len(mesh.vertices) == 4
 
@@ -62,7 +62,7 @@ def test_remove():
 def test_neighbors(mesh):
     for vertex in mesh.vertices:
         nb_nei = len(tuple(vertex.direct_neighbors))
-        assert nb_nei == 3
+        assert nb_nei in {3, 4}
         assert nb_nei == len(set(vertex.direct_neighbors))
 
 
