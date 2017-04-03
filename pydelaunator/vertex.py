@@ -60,10 +60,4 @@ class Vertex:
         return iter(self._pos)
 
     def __str__(self):
-        TRAD = {
-            (0, 0): 'A',
-            (100, 0): 'D',
-            (0, 100): 'B',
-            (100, 100): 'C',
-        }
-        return str(TRAD.get(self.pos, self.pos))
+        return str(self.pos)
