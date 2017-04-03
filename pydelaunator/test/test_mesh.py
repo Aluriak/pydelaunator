@@ -81,10 +81,8 @@ def buggy_mesh_1():
     uid = itertools.count()
     moving_one = dt.add(next(uid), 536, 206)
     dt.add(next(uid), 528, 209)
-    dt.add(next(uid), 133, 192)
-    dt.add(next(uid), 320, 107)
     dt.add(next(uid), 465, 325)
-    dt.add(next(uid), 503, 488)
+    dt.add(next(uid), 503, 488)  # commented: bug1 var 1 raises errors
     return dt, moving_one
 
 
@@ -117,4 +115,3 @@ def test_bug_1_variation_2(buggy_mesh_1):
         'Number of outgoing edge is not the same as direct_neighbors.',
         'Vertex have not enough neighbors (minimum is 3)'
     )
-
