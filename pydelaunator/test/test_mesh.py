@@ -94,7 +94,7 @@ def test_bug_1(buggy_mesh_1):
         dt.move(tgt, -2, -1)
     # thing is: this is the one or the other, probably depending of which vertex
     #  is tested first.
-    assert str(excinfo.value).startswith(('EV12', 'EV21'))
+    assert str(excinfo.value).startswith(('EV12', 'EV21', 'EV3'))
 
 def test_bug_1_variation_1(buggy_mesh_1):
     # in this case, there is no problem
@@ -108,4 +108,47 @@ def test_bug_1_variation_2(buggy_mesh_1):
         dt.move(tgt, -6, -1)
     # thing is: this is the one or the other, probably depending of which vertex
     #  is tested first.
-    assert str(excinfo.value).startswith(('EV12', 'EV21'))
+    assert str(excinfo.value).startswith(('EV12', 'EV21', 'EV3'))
+
+
+def test_bug_2(buggy_mesh_1):
+    # this is basically a proof that removing is not working properly
+    dt = Mesh(600, 600)
+    added = [
+        dt.add('point', 75, 381),   # 0
+        dt.add('point', 133, 192),  # 1
+        dt.add('point', 249, 574),  # 2
+        dt.add('point', 320, 107),  # 3
+        dt.add('point', 503, 488),  # 4
+        dt.add('point', 528, 209),  # 5
+        dt.add('point', 465, 325),  # 6
+    ]
+
+    dt.remove(added[2])
+    dt.remove(added[4])
+    dt.remove(added[6])
+    dt.remove(added[5])
+    try:  # this is not always. Just, sometimes, it fails.
+        dt.remove(added[0])
+    except AssertionError as excinfo:
+        assert str(excinfo).startswith(('EV3', 'EV12'))
+    else:  # the mesh was good
+        dt.remove(added[3])
+        with pytest.raises(AssertionError) as excinfo:
+            dt.remove(added[1])
+        assert str(excinfo.value).startswith('EC2')
+
+
+def test_bug_3():
+    # fixed by adding a root vertex
+    dt = Mesh(600, 600)
+
+    one = dt.add(1, 400, 300)
+    two = dt.add(2, 400, 400)
+    tee = dt.add(3, 400, 500)
+    foo = dt.add(4, 300, 400)
+    dt.remove(two)
+    dt.remove(tee)
+    dt.remove(foo)
+    dt.remove(one)
+
