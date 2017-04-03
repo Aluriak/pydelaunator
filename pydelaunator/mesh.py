@@ -301,39 +301,42 @@ class Mesh:
             assert b == bc.origin_vertex
             assert c == cd.origin_vertex
             assert d == da.origin_vertex
-            # modify the AC and CA edges to become the AI and CI edges.
-            self._edges -= {ac, ca}
-            ac.nullify()
-            ca.nullify()
-            del ac, ca
-            ai = Edge(a, obj)
-            # get the 8 new edges
-            ai, bi, ci, di = Edge(a, obj), Edge(b, obj), Edge(c, obj), Edge(d, obj)
-            ia, ib, ic, id = Edge(obj, a), Edge(obj, b), Edge(obj, c), Edge(obj, d)
-            self._edges |= {ic, ci, ia, ai, ib, bi, id, di}
 
-            id.next_left_edge, da.next_left_edge, ai.next_left_edge = da, ai, id
-            ia.next_left_edge, ab.next_left_edge, bi.next_left_edge = ab, bi, ia
-            ib.next_left_edge, bc.next_left_edge, ci.next_left_edge = bc, ci, ib
-            ic.next_left_edge, cd.next_left_edge, di.next_left_edge = cd, di, ic
+            # modify the AC and CA edges to become the AI and CI edges.
+            ai, ia = ac, ca
+            del ac, ca
+            ai.origin_vertex, ai.target_vertex = a, obj
+            ia.origin_vertex, ia.target_vertex = obj, a
+            # get the 8 new edges
+            bi, ci, di = Edge(b, obj), Edge(c, obj), Edge(d, obj)
+            ib, ic, id = Edge(obj, b), Edge(obj, c), Edge(obj, d)
+            self._edges |= {ic, ci, ib, bi, id, di}
+            assert ai in self._edges
+            assert ia in self._edges
 
             ai.opposite_edge = ia
             bi.opposite_edge = ib
             ci.opposite_edge = ic
             di.opposite_edge = id
 
-            # Create the four new faces
-            ab.left_face = bi.left_face = ia.left_face = Face(ab)
-            bc.left_face = ci.left_face = ib.left_face = Face(bc)
-            cd.left_face = di.left_face = ic.left_face = Face(cd)
-            da.left_face = ai.left_face = id.left_face = Face(da)
+            # form the four triangles
+            triangles = (
+                (id, da, ai),
+                (ia, ab, bi),
+                (ib, bc, ci),
+                (ic, cd, di),
+            )
+            for one, two, tee in triangles:
+                one.next_left_edge, two.next_left_edge, tee.next_left_edge = two, tee, one
+                one.left_face = two.left_face = tee.left_face = Face(one)
+
             # Manage the new vertex
             obj.edge = ia
             self._vertices.add(obj)
             self._apply_delaunay_condition(ab.left_face)
-            self._apply_delaunay_condition(bc.left_face)
+            # self._apply_delaunay_condition(bc.left_face)
             self._apply_delaunay_condition(cd.left_face)
-            self._apply_delaunay_condition(da.left_face)
+            # self._apply_delaunay_condition(da.left_face)
 
         elif isinstance(face_or_edge_or_vertex, Vertex):
             logger.info("({};{}) is on vertex {}.".format(x, y, face_or_edge_or_vertex))
