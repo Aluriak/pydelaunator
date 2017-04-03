@@ -142,7 +142,6 @@ def test_bug_2(buggy_mesh_1):
 def test_bug_3():
     # fixed by adding a root vertex
     dt = Mesh(600, 600)
-
     one = dt.add(1, 400, 300)
     two = dt.add(2, 400, 400)
     tee = dt.add(3, 400, 500)
@@ -151,4 +150,3 @@ def test_bug_3():
     dt.remove(tee)
     dt.remove(foo)
     dt.remove(one)
-
