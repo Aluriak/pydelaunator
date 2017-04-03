@@ -36,15 +36,15 @@ Similarly, some algorithms ideas could be easily tested here.
 Therefore, PyDelaunator is also a playground for further researchs.
 
 ### Computational geometry
-[Codes used there](geometry.py) are mainly constitued from online ressources (SO, wikipedia).
-They are *not* toroughly [tested](test_geometry.py), but as far as the triangulation works.
+[Codes used there](pydelaunator/geometry.py) are mainly constitued from online ressources (SO, wikipedia).
+They are *not* toroughly [tested](pydelaunator/test/test_geometry.py), but as far as the triangulation works.
 
 Implementating them in C could probably speed them up a little,
 since in python arithmetic codes tends to be costly.
 
 ### Duality Vertex/data
 Maybe not the most optimized, but a mapping object/vertex with a dict
-is certainly the less invasive for end-user, [as implemented in the Placer object](placer.py).
+is certainly the less invasive for end-user, [as implemented in the Placer object](pydelaunator/placer.py).
 
 Other ways to go:
 
