@@ -44,3 +44,14 @@ class Face:
 
     def __str__(self):
         return "FACE({}->{}->{})".format(self._edge.origin_vertex, self._edge.next_left_edge.origin_vertex, self._edge.next_left_edge.next_left_edge.origin_vertex)
+
+
+
+class OutsideFace(Face):
+
+    def circumcircle_contain_position(self, _) -> False:
+        """An outside face never contains anything."""
+        return False
+
+    def __str__(self):
+        return "FACE!({}->{}->{})".format(self._edge.origin_vertex, self._edge.next_left_edge.origin_vertex, self._edge.next_left_edge.next_left_edge.origin_vertex)
