@@ -120,8 +120,8 @@ class Mesh:
             assert face == edge.next_left_edge.left_face
             assert face == edge.next_left_edge.next_left_edge.left_face
         for vertex in self.vertices:
-            assert len(set(vertex.outgoing_edges)) == len(set(vertex.direct_neighbors))
-            assert len(set(vertex.direct_neighbors)) > 2
+            assert len(set(vertex.outgoing_edges)) == len(set(vertex.direct_neighbors)), "Number of outgoing edge is not the same as direct_neighbors."
+            assert len(set(vertex.direct_neighbors)) > 2, "Vertex have not enough neighbors (minimum is 3)"
             if vertex.edge.origin_vertex != vertex:
                 print()
                 print('VERTEX:', vertex)

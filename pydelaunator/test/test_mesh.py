@@ -1,5 +1,6 @@
 
 
+import itertools
 import pytest
 from pydelaunator import Mesh, Edge, Face, Vertex
 
@@ -72,3 +73,49 @@ def test_neighbors_more(mesh):
         nb_nei = len(tuple(vertex.direct_neighbors))
         assert nb_nei in {3, 4}
         assert nb_nei == len(set(vertex.direct_neighbors))
+
+
+@pytest.fixture
+def buggy_mesh_1():
+    dt = Mesh(600, 600)
+    uid = itertools.count()
+    moving_one = dt.add(next(uid), 536, 206)
+    dt.add(next(uid), 528, 209)
+    dt.add(next(uid), 133, 192)
+    dt.add(next(uid), 320, 107)
+    dt.add(next(uid), 465, 325)
+    dt.add(next(uid), 503, 488)
+    return dt, moving_one
+
+
+def test_bug_1(buggy_mesh_1):
+    # living bug that needs to be fixed
+    dt, tgt = buggy_mesh_1
+    dt.move(tgt, -4, 0)
+    with pytest.raises(AssertionError) as excinfo:
+        dt.move(tgt, -2, -1)
+    # thing is: this is the one or the other, probably depending of which vertex
+    #  is tested first.
+    assert str(excinfo.value) in (
+        'Number of outgoing edge is not the same as direct_neighbors.',
+        'Vertex have not enough neighbors (minimum is 3)'
+    )
+
+def test_bug_1_variation_1(buggy_mesh_1):
+    # in this case, there is no problem
+    dt, tgt = buggy_mesh_1
+    dt.move(tgt, -5, 0)
+    dt.move(tgt, -1, -1)
+
+def test_bug_1_variation_2(buggy_mesh_1):
+    # in this case, there is no problem
+    dt, tgt = buggy_mesh_1
+    with pytest.raises(AssertionError) as excinfo:
+        dt.move(tgt, -6, -1)
+    # thing is: this is the one or the other, probably depending of which vertex
+    #  is tested first.
+    assert str(excinfo.value) in (
+        'Number of outgoing edge is not the same as direct_neighbors.',
+        'Vertex have not enough neighbors (minimum is 3)'
+    )
+
