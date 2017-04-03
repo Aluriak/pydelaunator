@@ -18,13 +18,15 @@ class Mesh:
     by Edge and filled between by Face.
 
     """
-    __slots__ = ['width', 'height', 'outside_objects', '_corners', '_vertices', '_edges']
+    __slots__ = ['width', 'height', '_outside_objects', '_corners', '_vertices',
+                 '_edges', '_root_vertex']
 
 
     def __init__(self, width:int, height:int):
         self.width, self.height = width, height
-        self.outside_objects = frozenset()
+        self._outside_objects = frozenset()
         self._corners = frozenset()
+        self._root_vertex = None  # vertex linked to all corners.
         self._vertices = set()
         self._edges = set()
 
@@ -43,67 +45,90 @@ class Mesh:
         return i, j
 
     def _init_space(self):
-        # create the four corners
-        ul, ur, bl, br = Vertex(0, 0), Vertex(self.width, 0), Vertex(0, self.height), Vertex(self.width, self.height)
-        self._corners = frozenset((ur, ul, bl, br))
+        # create the four corners and the root vertex
+        a, b, d, c = Vertex(0, 0), Vertex(self.width, 0), Vertex(0, self.height), Vertex(self.width, self.height)
+        self._corners = frozenset((a, b, c, d))
         self._vertices = set(self.corners)
+        r = self._root_vertex = Vertex(None, None)
         edges = dict()
 
-        # Create the two outside triangles
-        outulbr = edges[ul, br] = Edge(ul, br, constrained=True)
-        outbrul = edges[br, ul] = Edge(br, ul, constrained=True)
-        outulbr.opposite_edge = outbrul
-        outbrul.left_face = Face(outbrul)
-        outulbr.left_face = Face(outulbr)
-        self.outside_objects = frozenset((outbrul, outulbr, outbrul.left_face, outulbr.left_face))
+        outside_triangles = {(r, d, a), (r, a, b), (r, b, c), (r, c, d)}
+        triangles = {(b, a, d), (d, c, b), *outside_triangles}
 
-        # Create the two internal triangles and the two outsiders
-        triangles = (
-            # internal layout
-            ((ul, bl), (bl, ur), (ur, ul), (True, False, True)),
-            ((bl, br), (br, ur), (ur, bl), (True, True, False)),
-            # outside
-            ((br, ul), (ul, ur), (ur, br), [True]*3),
-            ((ul, br), (br, bl), (bl, ul), [True]*3),
-        )
-        for pone, ptwo, ptee, constrained in triangles:
-            cone, ctwo, ctee = constrained
-            one = edges[pone] = edges.get(pone, Edge(*pone, constrained=cone))
-            two = edges[ptwo] = edges.get(ptwo, Edge(*ptwo, constrained=ctwo))
-            tee = edges[ptee] = edges.get(ptee, Edge(*ptee, constrained=ctee))
+        # Create the two internal triangles and the four outsiders
+        from pydelaunator.face import OutsideFace
+        for vertices in triangles:
+            vone, vtwo, vtee = vertices
+            face_builder = OutsideFace if vertices in outside_triangles else Face
+            assert isinstance(vone, Vertex)
+            assert isinstance(vtwo, Vertex)
+            assert isinstance(vtee, Vertex)
+            pone, ptwo, ptee = (vone, vtwo), (vtwo, vtee), (vtee, vone)
+            one = edges[pone] = Edge(*pone, constrained=True)
+            two = edges[ptwo] = Edge(*ptwo, constrained=True)
+            tee = edges[ptee] = Edge(*ptee, constrained=True)
             one.next_left_edge = two
             two.next_left_edge = tee
             tee.next_left_edge = one
-            one.left_face = two.left_face = tee.left_face = Face(one)
-            assert one.left_face == two.left_face
-            assert two.left_face == tee.left_face
+            one.left_face = two.left_face = tee.left_face = face_builder(one)
+            assert one.left_face is two.left_face
+            assert two.left_face is tee.left_face
+
+        # Remove constrains on BD and DB
+        edges[b, d].constrained = False
+        edges[d, b].constrained = False
+
         # Set oppositions
         for one, eone in edges.items():
             for two, etwo in edges.items():
                 if two == tuple(reversed(one)):
                     eone.opposite_edge = etwo
+
         # Merge Edge and Vertex Models
-        ur.edge = edges[ur, ul]
-        ul.edge = edges[ul, bl]
-        bl.edge = edges[bl, br]
-        br.edge = edges[br, ur]
-        # Merge outside edges with model
-        outulbr.next_left_edge = edges[br, bl]
-        outbrul.next_left_edge = edges[ul, ur]
+        a.edge = edges[a, b]
+        b.edge = edges[b, c]
+        c.edge = edges[c, d]
+        d.edge = edges[d, a]
+        r.edge = edges[r, a]
+
+        self._outside_objects = frozenset((
+            edges[r, a], edges[a, r], edges[r, a].left_face,
+            edges[r, b], edges[b, r], edges[r, b].left_face,
+            edges[r, c], edges[c, r], edges[r, c].left_face,
+            edges[r, d], edges[d, r], edges[r, d].left_face,
+            self._root_vertex
+        ))
+
         # Verifications
-        assert edges[br, ur].rot_right_edge == edges[br, ul]
-        assert edges[br, ur].rot_left_edge == edges[br, bl]
-        assert 4 == len(set(edge.left_face for edge in edges.values()))  # exactly 4 faces in whole structure
-        assert edges[ul, br].left_face == edges[bl, ul].left_face
-        assert edges[br, ul].left_face == edges[ur, br].left_face
-        # Keep track of all edges
-        self._edges = set(edges.values())
+        assert edges[b, d].rot_right_edge == edges[b, a]
+        assert edges[b, d].rot_left_edge == edges[b, c]
+        assert edges[b, d].left_face == edges[d, b].right_face
+        print(tuple((edge.left_face for edge in edges.values())))
+        assert 6 == len(set(edge.left_face for edge in edges.values()))  # exactly 6 faces in whole structure
+        # Keep track of all edges, except the ones related to vertex root.
+        self._edges = set(edges.values()) - self._outside_objects
         logger.info("Mesh initiated.")
 
 
     def _integrity_tests(self, aggressive=True):
         """Raise AssertionError on any inconsistency in the graph"""
         if not INTEGRITY_TESTS:  return
+
+        # count number of constrained edges between corners
+        nb_constrained = sum(1 for edge in self._edges if
+                             edge.origin_vertex in self._corners and
+                             edge.target_vertex in self._corners and
+                             edge.constrained)
+        assert nb_constrained == 8
+
+        if len(self._vertices) == len(self._corners) and True:
+            for corner in self._corners:
+                found = frozenset(corner.direct_neighbors)
+                assert len(found) >= 2, (
+                    "EC2: Corner vertex {} is not linked to at least 2 others."
+                    " The following {} are linked: {}"
+                    "".format(corner, len(found), found)
+                )
 
         for edge in self.edges:
             opps = edge.opposite_edge
@@ -151,8 +176,14 @@ class Mesh:
                 "EV4: Vertex {} references edge {} that has vertex {} as origin."
                 "".format(vertex, vertex.edge, vertex.edge.origin_vertex)
             )
-            for edge in vertex.surrounding_edges:
-                assert not geometry.point_collide_segment(*vertex, *edge.origin_vertex, *edge.target_vertex)
+            if vertex not in self._corners:
+                for edge in vertex.surrounding_edges:
+                    args = *vertex, *edge.origin_vertex, *edge.target_vertex
+                    assert not geometry.point_collide_segment(*args), (
+                        "EV5: Vertex {} collides with its surrounding edge {}. "
+                        "geometry.point_collide_segment({}) returned True"
+                        "".format(vertex, edge, ', '.join(map(str, args)))
+                    )
 
         if not aggressive:
             logger.info("Mesh integrity test ran with success.")
@@ -260,6 +291,7 @@ class Mesh:
             cd = ac.next_left_edge
             da = cd.next_left_edge
             assert bc.next_left_edge == ca
+
             # get the four surrounding points
             a = ca.target_vertex
             b = ab.target_vertex
@@ -423,8 +455,10 @@ class Mesh:
         return processed
 
 
-    def _flip_edge(self, illegal_edge1):
+    def _flip_edge(self, illegal_edge1) -> bool:
         """Flip given edge inside its two triangles structure.
+
+        Return True if flipping has been performed.
 
         Delaunator: Triangulation::operateFlip
 
@@ -432,11 +466,12 @@ class Mesh:
         if illegal_edge1 in self.outside_objects:
             print('EVQWSD: TRIED TO FLIP AN OUTSIDE EDGE — abort !')
             input('<ok>')
-            return
+            return False
         if illegal_edge1.constrained:
+            assert not illegal_edge1.opposite_edge.constrained
             assert illegal_edge1.opposite_edge.constrained
             logger.info("Constraigned Edge {} was not flipped.".format(illegal_edge1))
-            return
+            return False
         assert illegal_edge1 not in self.outside_objects
         # SHORTCUTS
         illegal_edge2 = illegal_edge1.opposite_edge
@@ -510,8 +545,9 @@ class Mesh:
         assert illegal_edge2.left_face is face2
         assert illegal_edge2.next_left_edge.left_face is face2
         assert illegal_edge2.next_left_edge.next_left_edge.left_face is face2
-        logger.info("Edge {} was flipped.".format(str(illegal_edge1)))
+        logger.info("Edge {} was flipped. Run integrity tests.".format(str(illegal_edge1)))
         self._integrity_tests()
+        return True
 
 
 
@@ -521,6 +557,8 @@ class Mesh:
     def corners(self) -> frozenset:  return frozenset(self._corners)
     @property
     def vertices(self) -> frozenset:  return frozenset(self._vertices)
+    @property
+    def outside_objects(self) -> frozenset:  return frozenset(self._outside_objects)
 
     def __iter__(self) -> iter:
         return iter(self.vertices)
@@ -566,13 +604,18 @@ class Mesh:
         #  so we need to track the faces to verify after the removal. (modified_faces)
         nei_edge = tuple(del_vertex.outgoing_edges)
         while len(nei_edge) > 4:
-            print('EUZNFE: NEIGHBORS ({}):'.format(len(nei_edge)), nei_edge)
+            logger.info("Vertex {} expose the following {} neighbors: {}."
+                        "".format(del_vertex, len(nei_edge),
+                                  ', '.join(map(str, del_vertex.direct_neighbors))))
             # For each triplet of neighbor, try to lost the middle one
             for eone, etwo, etee in commons.sliding(itertools.cycle(tuple(nei_edge)), size=3):
+                if etwo.constrained:  continue  # this one can't be flipped
                 one, two, tee = eone.target_vertex, etwo.target_vertex, etee.target_vertex
                 if geometry.segment_crosses_segment(one.pos, tee.pos, del_vertex.pos, two.pos):
                     # del_vertex will lose neighbor two if we flip etwo.
-                    self._flip_edge(etwo)
+                    if not self._flip_edge(etwo):
+                        logger.warning("Edge {} should have been flipped, "
+                                       "but didn't. That's weird.".format(etwo))
                     modified_faces |= {etwo.left_face, etwo.right_face}
                     # update the sets of neighbors
                     nei_edge = tuple(del_vertex.outgoing_edges)
@@ -784,7 +827,6 @@ class Mesh:
                 print("There is multiple {}->{} edges.".format(ori, tar))
                 edge_map[ori.pos, tar.pos] = (edge_map[ori.pos, tar.pos], edge)
         return edge_map
-
 
 
 if __name__ == "__main__":
