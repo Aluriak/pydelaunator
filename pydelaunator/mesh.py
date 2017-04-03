@@ -104,6 +104,7 @@ class Mesh:
     def _integrity_tests(self, aggressive=True):
         """Raise AssertionError on any inconsistency in the graph"""
         if not INTEGRITY_TESTS:  return
+
         for edge in self.edges:
             opps = edge.opposite_edge
             # print('\nFKCTZV:')
@@ -119,6 +120,7 @@ class Mesh:
             face = edge.left_face
             assert face == edge.next_left_edge.left_face
             assert face == edge.next_left_edge.next_left_edge.left_face
+
         for vertex in self.vertices:
             assert vertex.edge is not None, ("EV0: Vertex {} does not references"
                                              "any edge.".format(vertex))
@@ -153,6 +155,7 @@ class Mesh:
                 assert not geometry.point_collide_segment(*vertex, *edge.origin_vertex, *edge.target_vertex)
 
         if not aggressive:
+            logger.info("Mesh integrity test ran with success.")
             return  # do not performe the costly treatments that follow
 
         # Build intermediary data structure
@@ -160,7 +163,11 @@ class Mesh:
         edge_map = {}  # {position origin, position target: edge}
         for edge in self.edges:
             ori, tar = edge.origin_vertex.pos, edge.target_vertex.pos
-            assert (ori, tar) not in edge_map
+            assert (ori, tar) not in edge_map, (
+                "EE1: Edge {} linking vertices {} and {} is not the first"
+                " to do so. Edge {} is already doing that."
+                "".format(edge, edge.origin_vertex, edge.target_vertex, edge_map[ori, tar])
+            )
             edge_map[ori, tar] = edge
 
         # edge_map = {}  # {position origin, position target: edge}
