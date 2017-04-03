@@ -203,14 +203,17 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
             return
 
         color_black = (0, 0, 0, 255)
+        color_blue  = (0, 0, 255, 255)
         color_red   = (255, 0, 0, 255)
         diameter = 20
         for edge in dt.edges:
-            if edge in dt.outside_objects:  continue
             source, target = edge.origin_vertex, edge.target_vertex
             p1 = dt_position_to_screen_position(source.position)
             p2 = dt_position_to_screen_position(target.position)
-            if edge.constrained:
+            if edge in dt.outside_objects:
+                assert edge.constrained
+                color = color_blue + color_blue
+            elif edge.constrained:
                 color = color_red + color_red
             else:
                 source_color = color_red if source is dragged_point else getattr(source.payload, 'color', color_black)
