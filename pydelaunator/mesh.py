@@ -120,17 +120,37 @@ class Mesh:
             assert face == edge.next_left_edge.left_face
             assert face == edge.next_left_edge.next_left_edge.left_face
         for vertex in self.vertices:
-            assert len(set(vertex.outgoing_edges)) == len(set(vertex.direct_neighbors)), "Number of outgoing edge is not the same as direct_neighbors."
-            assert len(set(vertex.direct_neighbors)) > 2, "Vertex have not enough neighbors (minimum is 3)"
-            if vertex.edge.origin_vertex != vertex:
-                print()
-                print('VERTEX:', vertex)
-                print('VERTEX EDGE:', vertex.edge)
-                print('VERTEX EDGE ORIGIN:', vertex.edge.origin_vertex)
-                assert vertex.edge.origin_vertex == vertex
+            assert vertex.edge is not None, ("EV0: Vertex {} does not references"
+                                             "any edge.".format(vertex))
+            out_edge = tuple(vertex.outgoing_edges)
+            dir_neis = tuple(vertex.direct_neighbors)
+            assert len(out_edge) == len(set(out_edge)), (
+                "EV11: Vertex {} referencies the same edge multiple times in {}"
+                .format(vertex, ';'.join(map(str, out_edge)))
+            )
+            assert len(dir_neis) == len(set(dir_neis)), (
+                "EV12: Vertex {} referencies the same neighbor multiple times in {}"
+                "".format(vertex, ';'.join(map(str, dir_neis)))
+            )
+            assert len(out_edge) == len(dir_neis), (
+                "EV21: Number of outgoing edge ({}) is not the same as direct neighbors ({})."
+                "".format(len(out_edge), len(dir_neis))
+            )
+            assert len(set(out_edge)) == len(set(dir_neis)), (
+                "EV22: Number of unique outgoing edge ({}) is not the same as "
+                "unique direct neighbors ({})."
+                "".format(len(set(out_edge)), len(set(dir_neis)))
+            )
+            assert len(set(dir_neis)) > 2, (
+                "EV3: Vertex {} have not enough neighbors ({}, minimum is 3)"
+                "".format(vertex, len(dir_neis))
+            )
+            assert vertex.edge.origin_vertex == vertex, (
+                "EV4: Vertex {} references edge {} that has vertex {} as origin."
+                "".format(vertex, vertex.edge, vertex.edge.origin_vertex)
+            )
             for edge in vertex.surrounding_edges:
                 assert not geometry.point_collide_segment(*vertex, *edge.origin_vertex, *edge.target_vertex)
-            assert vertex.edge is not None
 
         if not aggressive:
             return  # do not performe the costly treatments that follow

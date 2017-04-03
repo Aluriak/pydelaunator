@@ -94,10 +94,7 @@ def test_bug_1(buggy_mesh_1):
         dt.move(tgt, -2, -1)
     # thing is: this is the one or the other, probably depending of which vertex
     #  is tested first.
-    assert str(excinfo.value) in (
-        'Number of outgoing edge is not the same as direct_neighbors.',
-        'Vertex have not enough neighbors (minimum is 3)'
-    )
+    assert str(excinfo.value).startswith(('EV12', 'EV21'))
 
 def test_bug_1_variation_1(buggy_mesh_1):
     # in this case, there is no problem
@@ -111,7 +108,4 @@ def test_bug_1_variation_2(buggy_mesh_1):
         dt.move(tgt, -6, -1)
     # thing is: this is the one or the other, probably depending of which vertex
     #  is tested first.
-    assert str(excinfo.value) in (
-        'Number of outgoing edge is not the same as direct_neighbors.',
-        'Vertex have not enough neighbors (minimum is 3)'
-    )
+    assert str(excinfo.value).startswith(('EV12', 'EV21'))
