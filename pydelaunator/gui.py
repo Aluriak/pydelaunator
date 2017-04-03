@@ -260,8 +260,8 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
         nonlocal dt
         if p is not None:
             try:
-                dt.move(p, x, y)
                 print('dt.move({}, {}, {})'.format(p, x, y))
+                dt.move(p, x, y)
             except AssertionError as err:
                 import traceback
                 traceback.print_tb(err.__traceback__)
@@ -289,8 +289,8 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
     def _snapshot():
         nonlocal dt
         print('\nsnapshot:')
-        for c in (o.coordinates() for o in dt.trianguledObjects()):
-            print('\t_addPointToDT' + str((c.x, c.y)))
+        for c in dt.vertices:
+            print("\tdt.add({}, {}, {})".format(c.payload, *c))
 
     dt = Mesh(*UNIVERSE_SIZE)
     start_gui(dt)
