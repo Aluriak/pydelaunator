@@ -60,16 +60,17 @@ class Mesh:
         # Create the two internal triangles and the two outsiders
         triangles = (
             # internal layout
-            ((ul, bl), (bl, ur), (ur, ul), False),
-            ((bl, br), (br, ur), (ur, bl), False),
+            ((ul, bl), (bl, ur), (ur, ul), (True, False, True)),
+            ((bl, br), (br, ur), (ur, bl), (True, True, False)),
             # outside
-            ((br, ul), (ul, ur), (ur, br), True),
-            ((ul, br), (br, bl), (bl, ul), True),
+            ((br, ul), (ul, ur), (ur, br), [True]*3),
+            ((ul, br), (br, bl), (bl, ul), [True]*3),
         )
         for pone, ptwo, ptee, constrained in triangles:
-            one = edges[pone] = edges.get(pone, Edge(*pone, constrained=constrained))
-            two = edges[ptwo] = edges.get(ptwo, Edge(*ptwo, constrained=constrained))
-            tee = edges[ptee] = edges.get(ptee, Edge(*ptee, constrained=constrained))
+            cone, ctwo, ctee = constrained
+            one = edges[pone] = edges.get(pone, Edge(*pone, constrained=cone))
+            two = edges[ptwo] = edges.get(ptwo, Edge(*ptwo, constrained=ctwo))
+            tee = edges[ptee] = edges.get(ptee, Edge(*ptee, constrained=ctee))
             one.next_left_edge = two
             two.next_left_edge = tee
             tee.next_left_edge = one
