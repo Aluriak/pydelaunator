@@ -18,6 +18,7 @@ setup(
     name='pydelaunator',
     version='0.0.2',
     packages=find_packages(),
+    include_package_data = True,  # read the MANIFEST.in file
     install_requires=reqs,
 
     author="lucas bourneuf",
