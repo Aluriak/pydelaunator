@@ -145,6 +145,8 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
             dt.print()
         elif symbol in (key.M, key.T):
             _moveAllPoints()
+        elif symbol in (key.I,):
+            dt._integrity_tests()
         elif symbol in (key.S,):
             _snapshot()
         elif symbol == key.DELETE:  # del point
@@ -241,6 +243,7 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
             if dragged_point == point:
                 dragged_point = None
             try:
+                print("dt.remove({})".format(point.pos))
                 dt.remove(point)
             except ValueError as err:
                 print(err)
