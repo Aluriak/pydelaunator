@@ -1,4 +1,4 @@
-from pydelaunator import geometry
+from pydelaunator import geometry, Vertex
 
 
 class Edge:
@@ -58,9 +58,17 @@ class Edge:
     @property
     def origin_vertex(self):
         return self._origin_vertex
+    @origin_vertex.setter
+    def origin_vertex(self, new):
+        assert isinstance(new, Vertex)
+        self._origin_vertex = new
     @property
     def target_vertex(self):
         return self._target_vertex
+    @target_vertex.setter
+    def target_vertex(self, new):
+        assert isinstance(new, Vertex)
+        self._target_vertex = new
 
     @property
     def next_left_edge(self):
@@ -107,6 +115,9 @@ class Edge:
     @property
     def constrained(self) -> bool:
         return self._constrained
+    @constrained.setter
+    def constrained(self, constrained:bool):
+        self._constrained = bool(constrained)
 
     def __str__(self):
         return "EDGE{}({}->{})".format(('!' if self.constrained else ''),
