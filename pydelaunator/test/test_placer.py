@@ -43,6 +43,7 @@ def test_basic_navigation(placer, mockdata):
         assert isinstance(placer.add(obj, *pos), MockData)
     assert set(placer.objects_and_positions) == set(positions.items())
     placer.move(foo, 50, 0)
+    assert placer.position_of(foo) == (150, 200)
     nearests = tuple(placer.nearests(foo))
     assert len(nearests) == 1
     assert nearests[0] is tee

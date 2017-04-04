@@ -44,6 +44,10 @@ class Placer:
         yield from (vertex.payload for vertex in vertices
                     if vertex not in self.mesh.corners)
 
+    def position_of(self, obj:object or Vertex) -> (int, int) or TypeError:
+        """Return position of given object or Vertex"""
+        return tuple(self._objects.get(obj, obj))
+
     def __iter__(self) -> object:
         """Yield objects in mesh"""
         yield from self.mesh
