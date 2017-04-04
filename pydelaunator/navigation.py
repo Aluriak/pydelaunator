@@ -12,7 +12,10 @@ from pydelaunator.geometry import distance_between_points
 
 def neighbors(vertex:Vertex, max_dist:float=inf, min_dist:float=0.) -> iter:
     assert vertex
-    assert min_dist <= max_dist
+    if min_dist > max_dist:
+        raise ValueError("Given minimal distance ({}) is greater than the "
+                         "maximal one ({}), which is basically a non-sens"
+                         "".format(min_dist, max_dist))
     reference = vertex
     cur_edge = vertex.edge
     assert cur_edge
@@ -20,12 +23,13 @@ def neighbors(vertex:Vertex, max_dist:float=inf, min_dist:float=0.) -> iter:
     queue = deque([vertex])
 
     def found(v:Vertex) -> (Vertex) or ():
-        if v not in found_neighbors:
-            found_neighbors.add(v)
-            dist = distance_between_points(*reference, *v)
-            if min_dist <= dist <= max_dist:
-                queue.append(v)
-                yield v
+        if v in found_neighbors:
+            return  # already treated
+        found_neighbors.add(v)
+        dist = distance_between_points(*reference, *v)
+        if min_dist <= dist <= max_dist:
+            queue.append(v)
+            yield v
 
     while queue:
         vertex = queue.popleft()
