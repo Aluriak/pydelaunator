@@ -43,3 +43,7 @@ class Placer:
         vertices = navigation.neighbors(self._objects[obj], max_dist, min_dist)
         yield from (vertex.payload for vertex in vertices
                     if vertex not in self.mesh.corners)
+
+    def __iter__(self) -> object:
+        """Yield objects in mesh"""
+        yield from self.mesh
