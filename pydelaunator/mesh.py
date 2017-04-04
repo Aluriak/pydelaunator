@@ -2,6 +2,7 @@
 
 """
 
+import math
 import random
 import itertools
 
@@ -49,7 +50,7 @@ class Mesh:
         a, b, d, c = Vertex(0, 0), Vertex(self.width, 0), Vertex(0, self.height), Vertex(self.width, self.height)
         self._corners = frozenset((a, b, c, d))
         self._vertices = set(self.corners)
-        r = self._root_vertex = Vertex(None, None)
+        r = self._root_vertex = Vertex(math.nan, math.nan)
         edges = dict()
 
         outside_triangles = {(r, d, a), (r, a, b), (r, b, c), (r, c, d)}
