@@ -42,3 +42,10 @@ def test_basic_navigation(placer, mockdata):
     nearests = tuple(placer.nearests(foo))
     assert len(nearests) == 1
     assert nearests[0] is tee
+    neis = tuple(placer.neighbors(foo, max_dist=50))
+    assert len(nearests) == 1
+    assert nearests[0] is tee
+    neis = set(placer.neighbors(foo, min_dist=51))
+    print(*map(str, neis))
+    assert len(neis) == 2
+    assert neis == {one, two}
