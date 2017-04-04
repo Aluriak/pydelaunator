@@ -47,3 +47,8 @@ class Placer:
     def __iter__(self) -> object:
         """Yield objects in mesh"""
         yield from self.mesh
+
+    @property
+    def objects_and_positions(self) -> (object, tuple):
+        """Yield (object, position) in mesh"""
+        yield from ((v.payload, v.pos) for v in self.mesh)
