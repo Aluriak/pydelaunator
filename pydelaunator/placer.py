@@ -35,8 +35,11 @@ class Placer:
 
     def nearests(self, obj:object) -> iter:
         """Yield the nearests objects."""
-        yield from (vertex.payload for vertex in navigation.nearests(self._objects[obj]))
+        vertices = navigation.nearests(self._objects[obj])
+        yield from (vertex.payload for vertex in vertices
+                    if vertex not in self.mesh.corners)
 
     def neighbors(self, obj:object, max_dist:float=inf, min_dist:float=0.) -> iter:
-        found = navigation.neighbors(self._objects[obj], max_dist, min_dist)
-        yield from (vertex.payload for vertex in found)
+        vertices = navigation.neighbors(self._objects[obj], max_dist, min_dist)
+        yield from (vertex.payload for vertex in vertices
+                    if vertex not in self.mesh.corners)
