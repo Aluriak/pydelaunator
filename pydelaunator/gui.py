@@ -203,6 +203,7 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
             return
 
         color_black = (0, 0, 0, 255)
+        color_green = (0, 255, 0, 255)
         color_blue  = (0, 0, 255, 255)
         color_red   = (255, 0, 0, 255)
         diameter = 20
