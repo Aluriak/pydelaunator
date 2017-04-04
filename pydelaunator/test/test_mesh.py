@@ -134,9 +134,9 @@ def test_bug_2(buggy_mesh_1):
         assert str(excinfo).startswith(('EV3', 'EV12'))
     else:  # the mesh was good
         dt.remove(added[3])
-        with pytest.raises(AssertionError) as excinfo:
-            dt.remove(added[1])
-        assert str(excinfo.value).startswith('EC2')
+        # with pytest.raises(AssertionError) as excinfo:
+        dt.remove(added[1])
+        # assert str(excinfo.value).startswith('EC2')
 
 
 def test_bug_3():
