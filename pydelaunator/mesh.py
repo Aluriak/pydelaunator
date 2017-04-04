@@ -28,7 +28,7 @@ class Mesh:
         self._outside_objects = frozenset()
         self._corners = frozenset()
         self._root_vertex = None  # vertex linked to all corners.
-        self._vertices = set()
+        self._vertices = set()  # vertices added by client code
         self._edges = set()
 
         self._init_space()
@@ -49,7 +49,7 @@ class Mesh:
         # create the four corners and the root vertex
         a, b, d, c = Vertex(0, 0), Vertex(self.width, 0), Vertex(0, self.height), Vertex(self.width, self.height)
         self._corners = frozenset((a, b, c, d))
-        self._vertices = set(self.corners)
+        self._vertices = set()
         r = self._root_vertex = Vertex(math.nan, math.nan)
         edges = dict()
 
@@ -122,7 +122,7 @@ class Mesh:
                              edge.constrained)
         assert nb_constrained == 8
 
-        if len(self._vertices) == len(self._corners) and True:
+        if not self._vertices:
             for corner in self._corners:
                 found = frozenset(corner.direct_neighbors)
                 assert len(found) >= 2, (
@@ -560,12 +560,19 @@ class Mesh:
     @property
     def corners(self) -> frozenset:  return frozenset(self._corners)
     @property
-    def vertices(self) -> frozenset:  return frozenset(self._vertices)
+    def vertices(self) -> frozenset:
+        """Yield all vertices added by client code (i.e. no corners)"""
+        return frozenset(self._vertices)
+    @property
+    def all_vertices(self) -> iter:
+        """Yield all vertices, including corners"""
+        yield from self._corners
+        yield from self._vertices
     @property
     def outside_objects(self) -> frozenset:  return frozenset(self._outside_objects)
 
     def __iter__(self) -> iter:
-        return iter(self.vertices)
+        yield from self._vertices
 
     def print(self, do_layout:bool=True) -> object:
         edges = []

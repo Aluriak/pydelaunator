@@ -34,17 +34,21 @@ def test_mesh_add(mesh):
 def test_mesh(mesh):
     assert len(mesh.edges) == 10
     assert len(mesh.corners) == 4
-    assert len(mesh.vertices) == 4
-    assert mesh.vertices == mesh.corners
+    assert len(mesh.vertices) == 0
+    assert set(mesh) == mesh.vertices
     added = mesh.add('object', 50, 50)
     assert mesh.vertices != mesh.corners
-    assert len(mesh.vertices) == 5
+    assert len(mesh.edges) == 16
+    assert len(mesh.corners) == 4
+    assert len(mesh.vertices) == 1
+    assert set(mesh) == mesh.vertices
     assert added in mesh.vertices
     assert added not in mesh.corners
     added = mesh.remove(added)
     assert len(mesh.edges) == 10
     assert len(mesh.corners) == 4
-    assert len(mesh.vertices) == 4
+    assert len(mesh.vertices) == 0
+    assert set(mesh) == mesh.vertices
 
 
 def test_remove():
