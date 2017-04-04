@@ -6,7 +6,8 @@ import argparse
 
 def parse_cli() -> dict:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--universe-size', '-u', type=tuple, default=(600, 600),
+    parser.add_argument('--universe-size', '-u', nargs=2, metavar=('W', 'H'),
+                        type=int, default=(600, 600),
                         help="size of universe/window.")
     parser.add_argument('--padding', '-p', type=int, default=50,
                         help="space between triangulation and window border.")
