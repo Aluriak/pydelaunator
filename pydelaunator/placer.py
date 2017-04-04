@@ -1,5 +1,6 @@
 
 
+from math import inf
 from pydelaunator import navigation
 from pydelaunator import Mesh, Vertex
 from pydelaunator.commons import logger
@@ -36,6 +37,6 @@ class Placer:
         """Yield the nearests objects."""
         yield from (vertex.payload for vertex in navigation.nearests(self._objects[obj]))
 
-
-if __name__ == "__main__":
-    pass
+    def neighbors(self, obj:object, max_dist:float=inf, min_dist:float=0.) -> iter:
+        found = navigation.neighbors(self._objects[obj], max_dist, min_dist)
+        yield from (vertex.payload for vertex in found)
