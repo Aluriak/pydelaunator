@@ -119,6 +119,13 @@ class Edge:
     def constrained(self, constrained:bool):
         self._constrained = bool(constrained)
 
+    @property
+    def distance(self) -> float:
+        """Distance between origin and target vertices. Note that this is
+        computed at each call, so it is costly.
+        """
+        return geometry.distance_between_points(*self._origin_vertex, *self._target_vertex)
+
     def __str__(self):
         return "EDGE{}({}->{})".format(('!' if self.constrained else ''),
                                        self.origin_vertex, self.target_vertex)

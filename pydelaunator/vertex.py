@@ -22,8 +22,6 @@ class Vertex:
         """Yield edges that surround self (but do not collide with)"""
         yield from (edge.next_left_edge for edge in self.outgoing_edges)
 
-
-
     @property
     def pos(self):
         return tuple(self._pos)

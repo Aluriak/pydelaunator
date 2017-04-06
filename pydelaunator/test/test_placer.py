@@ -29,16 +29,28 @@ def mockdata():
 
 
 def test_basics(placer, social_network):
+    added = set()
     for people, pos in social_network.items():
         placer.add(people, *pos)
+        added.add((people, pos))
+    assert set(placer.objects_and_positions) == added
+
 
 def test_basic_navigation(placer, mockdata):
     one, two, tee, foo = mockdata
-    assert isinstance(placer.add(one, 100, 100), MockData)
-    assert isinstance(placer.add(two, 200, 100), MockData)
-    assert isinstance(placer.add(tee, 200, 200), MockData)
-    assert isinstance(placer.add(foo, 100, 200), MockData)
+    positions = {one: (100, 100), two: (200, 100), tee: (200, 200), foo: (100, 200)}
+    for obj, pos in positions.items():
+        assert isinstance(placer.add(obj, *pos), MockData)
+    assert set(placer.objects_and_positions) == set(positions.items())
     placer.move(foo, 50, 0)
+    assert placer.position_of(foo) == (150, 200)
     nearests = tuple(placer.nearests(foo))
     assert len(nearests) == 1
     assert nearests[0] is tee
+    neis = tuple(placer.neighbors(foo, max_dist=50))
+    assert len(nearests) == 1
+    assert nearests[0] is tee
+    neis = set(placer.neighbors(foo, min_dist=51))
+    print(*map(str, neis))
+    assert len(neis) == 2
+    assert neis == {one, two}
