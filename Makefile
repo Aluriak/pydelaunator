@@ -8,7 +8,7 @@ t: tests
 tests:
 	pytest pydelaunator --doctest-module --ignore=venv/ --ignore=gui.py
 mt:
-	watch -c -e -n 0.5 make tests
+	watch -n 0.5 -c -e -b make tests
 
 
 # Pypi related recipes
