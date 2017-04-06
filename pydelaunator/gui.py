@@ -4,10 +4,13 @@ Commands:
     ESC: quit
     ESPACE or ENTER: add a point at mouse position
     DELETE: remove point at mouse position
-    drag&drop: point to move it
-    a: toggle auto-adding points
-    t: toggle random moving
-    s: take a snapshot of all points positions
+    drag&drop: point to move it.
+    a: toggle auto-adding points.
+    i: run mesh integrity tests.
+    s: take a snapshot of all points positions.
+    m: move slighly all points.
+    v: specify pointed node as the Choosen one.
+    arrows: modify the speed of the Choosen one.
 
 """
 
