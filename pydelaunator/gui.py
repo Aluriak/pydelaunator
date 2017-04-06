@@ -145,7 +145,7 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
             auto_add = not auto_add
         elif symbol == key.P:
             dt.print()
-        elif symbol in (key.M, key.T):
+        elif symbol == key.M:
             _moveAllPoints()
         elif symbol in (key.I,):
             dt._integrity_tests()
