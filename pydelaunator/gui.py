@@ -48,6 +48,7 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
     auto_mov = False
     dragged_point = None
     choosen_point_speed = None
+    choosen_point_accel = None
     choosen_point = None
     mouse_position = None
     counter = 0
@@ -131,7 +132,7 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
 
     @window.event
     def on_key_press(symbol, modifiers):
-        nonlocal auto_add, mouse_position, choosen_point, choosen_point_speed
+        nonlocal auto_add, mouse_position, choosen_point, choosen_point_speed, choosen_point_accel
         if symbol == key.RETURN or symbol == key.SPACE: # add point
             if mouse_position is not None:
                 _addPointToDT(*mouse_position)
@@ -158,7 +159,7 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
             if mouse_position is not None:
                 _delPoint(_getPointAt(*mouse_position))
         elif symbol in (key.V,):
-            if choosen_point_speed:
+            if choosen_point:
                 choosen_point_speed = None
                 choosen_point = None
                 pyglet.clock.unschedule(schedulable_move_choosen_point)
@@ -166,19 +167,20 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
                 choosen_point = _getPointAt(*mouse_position)
                 if choosen_point:
                     choosen_point_speed = (0, 0)
+                    choosen_point_accel = (0, 0)
                 pyglet.clock.schedule_interval(
                     schedulable_move_choosen_point,
                     interval=INTERFACE_TIME_SPEED
                 )
         elif choosen_point:
             if symbol == key.LEFT:
-                choosen_point_speed = choosen_point_speed[0] - 1, choosen_point_speed[1]
+                choosen_point_accel = choosen_point_accel[0] - 1, choosen_point_accel[1]
             elif symbol == key.RIGHT:
-                choosen_point_speed = choosen_point_speed[0] + 1, choosen_point_speed[1]
+                choosen_point_accel = choosen_point_accel[0] + 1, choosen_point_accel[1]
             elif symbol == key.UP:
-                choosen_point_speed = choosen_point_speed[0], choosen_point_speed[1] + 1
+                choosen_point_accel = choosen_point_accel[0], choosen_point_accel[1] + 1
             elif symbol == key.DOWN:
-                choosen_point_speed = choosen_point_speed[0], choosen_point_speed[1] - 1
+                choosen_point_accel = choosen_point_accel[0], choosen_point_accel[1] - 1
 
 
     @window.event
@@ -252,8 +254,14 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
 
     ################# POINT FUNCTIONS #################
     def schedulable_move_choosen_point(dt, *args, **kwargs):
-        nonlocal choosen_point, choosen_point_speed
-        if choosen_point and choosen_point_speed:
+        nonlocal choosen_point, choosen_point_speed, choosen_point_accel
+        sx, sy = choosen_point_speed
+        ax, ay = choosen_point_accel
+        decay = lambda x: max(0, x - 0.1) if x >= 0 else min(0, x + 0.1)
+        nodecay = lambda x: x
+        choosen_point_speed = decay(sx + ax), decay(sy + ay)
+        choosen_point_accel = decay(ax), decay(ay)
+        if choosen_point:
             _movePoint(*choosen_point_speed, choosen_point, log=False)
 
 
