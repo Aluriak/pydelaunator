@@ -44,6 +44,8 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
     auto_add = False
     auto_mov = False
     dragged_point = None
+    choosen_point_speed = None
+    choosen_point = None
     mouse_position = None
     counter = 0
     dt = None
@@ -126,7 +128,7 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
 
     @window.event
     def on_key_press(symbol, modifiers):
-        nonlocal auto_add, mouse_position
+        nonlocal auto_add, mouse_position, choosen_point, choosen_point_speed
         if symbol == key.RETURN or symbol == key.SPACE: # add point
             if mouse_position is not None:
                 _addPointToDT(*mouse_position)
@@ -152,6 +154,28 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
         elif symbol == key.DELETE:  # del point
             if mouse_position is not None:
                 _delPoint(_getPointAt(*mouse_position))
+        elif symbol in (key.V,):
+            if choosen_point_speed:
+                choosen_point_speed = None
+                choosen_point = None
+                pyglet.clock.unschedule(schedulable_move_choosen_point)
+            elif mouse_position:  # not already activated
+                choosen_point = _getPointAt(*mouse_position)
+                if choosen_point:
+                    choosen_point_speed = (0, 0)
+                pyglet.clock.schedule_interval(
+                    schedulable_move_choosen_point,
+                    interval=INTERFACE_TIME_SPEED
+                )
+        elif choosen_point:
+            if symbol == key.LEFT:
+                choosen_point_speed = choosen_point_speed[0] - 1, choosen_point_speed[1]
+            elif symbol == key.RIGHT:
+                choosen_point_speed = choosen_point_speed[0] + 1, choosen_point_speed[1]
+            elif symbol == key.UP:
+                choosen_point_speed = choosen_point_speed[0], choosen_point_speed[1] + 1
+            elif symbol == key.DOWN:
+                choosen_point_speed = choosen_point_speed[0], choosen_point_speed[1] - 1
 
 
     @window.event
@@ -224,6 +248,12 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
 
 
     ################# POINT FUNCTIONS #################
+    def schedulable_move_choosen_point(dt, *args, **kwargs):
+        nonlocal choosen_point, choosen_point_speed
+        if choosen_point and choosen_point_speed:
+            _movePoint(*choosen_point_speed, choosen_point, log=False)
+
+
     def schedulable_addPointToDT(dt, *args, **kwargs):
         return _addPointToDT(*args, **kwargs)
 
@@ -262,12 +292,12 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
             return None
 
 
-    def _movePoint(x, y, p):
+    def _movePoint(x, y, p, log=True):
         """Add given values to (x;y) of given point"""
         nonlocal dt
         if p is not None:
             try:
-                print('dt.move({}, {}, {})'.format(p, x, y))
+                if log: print('dt.move({}, {}, {})'.format(p, x, y))
                 dt.move(p, x, y)
             except AssertionError as err:
                 import traceback
