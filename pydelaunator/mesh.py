@@ -119,110 +119,121 @@ class Mesh:
                              edge.origin_vertex in self._corners and
                              edge.target_vertex in self._corners and
                              edge.constrained)
-        assert nb_constrained == 8
+        try:
+            assert nb_constrained == 8
 
-        if not self._vertices:
-            for corner in self._corners:
-                found = frozenset(corner.direct_neighbors)
-                assert len(found) >= 2, (
-                    "EC2: Corner vertex {} is not linked to at least 2 others."
-                    " The following {} are linked: {}"
-                    "".format(corner, len(found), found)
-                )
-
-        for edge in self.edges:
-            opps = edge.opposite_edge
-            # print('\nFKCTZV:')
-            # print('E,O:', edge, opps)
-            # print('N  :', edge.next_left_edge)
-            # print('NN :', edge.next_left_edge.next_left_edge)
-            # print('NNN:', edge.next_left_edge.next_left_edge.next_left_edge)
-            assert edge is not edge.next_left_edge
-            assert edge.opposite_edge is not edge.next_left_edge
-            assert edge.next_left_edge.next_left_edge.next_left_edge == edge
-            assert opps.next_left_edge.next_left_edge.next_left_edge == opps
-            assert edge.next_right_edge.next_right_edge.next_right_edge == edge
-            face = edge.left_face
-            assert face == edge.next_left_edge.left_face
-            assert face == edge.next_left_edge.next_left_edge.left_face
-
-        for vertex in self.vertices:
-            assert vertex.edge is not None, ("EV0: Vertex {} does not references"
-                                             "any edge.".format(vertex))
-            out_edge = tuple(vertex.outgoing_edges)
-            dir_neis = tuple(vertex.direct_neighbors)
-            assert len(out_edge) == len(set(out_edge)), (
-                "EV11: Vertex {} referencies the same edge multiple times in {}"
-                .format(vertex, ';'.join(map(str, out_edge)))
-            )
-            assert len(dir_neis) == len(set(dir_neis)), (
-                "EV12: Vertex {} referencies the same neighbor multiple times in {}"
-                "".format(vertex, ';'.join(map(str, dir_neis)))
-            )
-            assert len(out_edge) == len(dir_neis), (
-                "EV21: Number of outgoing edge ({}) is not the same as direct neighbors ({})."
-                "".format(len(out_edge), len(dir_neis))
-            )
-            assert len(set(out_edge)) == len(set(dir_neis)), (
-                "EV22: Number of unique outgoing edge ({}) is not the same as "
-                "unique direct neighbors ({})."
-                "".format(len(set(out_edge)), len(set(dir_neis)))
-            )
-            assert len(set(dir_neis)) > 2, (
-                "EV3: Vertex {} have not enough neighbors ({}, minimum is 3)"
-                "".format(vertex, len(dir_neis))
-            )
-            assert vertex.edge.origin_vertex == vertex, (
-                "EV4: Vertex {} references edge {} that has vertex {} as origin."
-                "".format(vertex, vertex.edge, vertex.edge.origin_vertex)
-            )
-            if vertex not in self._corners:
-                for edge in vertex.surrounding_edges:
-                    args = *vertex, *edge.origin_vertex, *edge.target_vertex
-                    assert not geometry.point_collide_segment(*args), (
-                        "EV5: Vertex {} collides with its surrounding edge {}. "
-                        "geometry.point_collide_segment({}) returned True"
-                        "".format(vertex, edge, ', '.join(map(str, args)))
+            if not self._vertices:
+                for corner in self._corners:
+                    # for edge in corner.outgoing_edges:
+                        # print('CORNER {} is linked to {} by {}. {} {}'.format(
+                            # corner, edge.target_vertex, edge,
+                            # '[CONSTRAINED]' if edge.constrained else '',
+                            # '[OUTSIDER]' if edge in self.outside_objects else ''
+                        # ))
+                    found = frozenset(corner.direct_neighbors)
+                    assert len(found) >= 2, (
+                        "EC2: Corner vertex {} is not linked to at least 2 others."
+                        " The following {} are linked: {}"
+                        "".format(corner, len(found), found)
                     )
 
-        if not aggressive:
-            logger.info("Mesh integrity test ran with success.")
-            return  # do not performe the costly treatments that follow
+            for edge in self.edges:
+                opps = edge.opposite_edge
+                # print('\nFKCTZV:')
+                # print('E,O:', edge, opps)
+                # print('N  :', edge.next_left_edge)
+                # print('NN :', edge.next_left_edge.next_left_edge)
+                # print('NNN:', edge.next_left_edge.next_left_edge.next_left_edge)
+                assert edge is not edge.next_left_edge
+                assert edge.opposite_edge is not edge.next_left_edge
+                assert edge.next_left_edge.next_left_edge.next_left_edge == edge
+                assert opps.next_left_edge.next_left_edge.next_left_edge == opps
+                assert edge.next_right_edge.next_right_edge.next_right_edge == edge
+                face = edge.left_face
+                assert face == edge.next_left_edge.left_face
+                assert face == edge.next_left_edge.next_left_edge.left_face
 
-        # Build intermediary data structure
-        #  it will allow more powerful integrity_tests
-        edge_map = {}  # {position origin, position target: edge}
-        for edge in self.edges:
-            ori, tar = edge.origin_vertex.pos, edge.target_vertex.pos
-            assert (ori, tar) not in edge_map, (
-                "EE1: Edge {} linking vertices {} and {} is not the first"
-                " to do so. Edge {} is already doing that."
-                "".format(edge, edge.origin_vertex, edge.target_vertex, edge_map[ori, tar])
-            )
-            edge_map[ori, tar] = edge
+            for vertex in self.vertices:
+                assert vertex.edge is not None, ("EV0: Vertex {} does not references"
+                                                 "any edge.".format(vertex))
+                out_edge = tuple(vertex.outgoing_edges)
+                dir_neis = tuple(vertex.direct_neighbors)
+                assert len(out_edge) == len(set(out_edge)), (
+                    "EV11: Vertex {} referencies the same edge multiple times in {}"
+                    .format(vertex, ';'.join(map(str, out_edge)))
+                )
+                assert len(dir_neis) == len(set(dir_neis)), (
+                    "EV12: Vertex {} referencies the same neighbor multiple times in {}"
+                    "".format(vertex, ';'.join(map(str, dir_neis)))
+                )
+                assert len(out_edge) == len(dir_neis), (
+                    "EV21: Number of outgoing edge ({}) is not the same as direct neighbors ({})."
+                    "".format(len(out_edge), len(dir_neis))
+                )
+                assert len(set(out_edge)) == len(set(dir_neis)), (
+                    "EV22: Number of unique outgoing edge ({}) is not the same as "
+                    "unique direct neighbors ({})."
+                    "".format(len(set(out_edge)), len(set(dir_neis)))
+                )
+                assert len(set(dir_neis)) > 2, (
+                    "EV3: Vertex {} have not enough neighbors ({}, minimum is 3)"
+                    "".format(vertex, len(dir_neis))
+                )
+                assert vertex.edge.origin_vertex == vertex, (
+                    "EV4: Vertex {} references edge {} that has vertex {} as origin."
+                    "".format(vertex, vertex.edge, vertex.edge.origin_vertex)
+                )
+                if vertex not in self._corners:
+                    for edge in vertex.surrounding_edges:
+                        args = *vertex, *edge.origin_vertex, *edge.target_vertex
+                        assert not geometry.point_collide_segment(*args), (
+                            "EV5: Vertex {} collides with its surrounding edge {}. "
+                            "geometry.point_collide_segment({}) returned True"
+                            "".format(vertex, edge, ', '.join(map(str, args)))
+                        )
 
-        # edge_map = {}  # {position origin, position target: edge}
-        # for edge in self.edges:
-            # print()
-            # ori, tar = edge.origin_vertex.pos, edge.target_vertex.pos
-            # if (ori, tar) not in edge_map:
-                # edge_map[ori, tar] = edge
-            # else:
-                # print('NTNEWN:', ori, tar, str(edge))
-                # print("There is multiple {}->{} edges.".format(ori, tar))
-                # edge_map[ori, tar] = (edge_map[ori, tar], edge)
-        # from pprint import pprint
-        # pprint({k: str(v) for k, v in edge_map.items()})
-        # return  # next tests are not yet opened to public ; needs a proper edge_map (only one edge by node combination)
-        for ori in self.vertices:
-            ori = ori.pos
-            for tar in self.vertices:
-                tar = tar.pos
-                if (ori, tar) in edge_map:
-                    assert (tar, ori) in edge_map
-                    one, two = edge_map[ori, tar], edge_map[tar, ori]
-                    assert one.opposite_edge == two
-        logger.info("Mesh aggressive integrity test ran with success.")
+            if not aggressive:
+                logger.info("Mesh integrity test ran with success.")
+                return  # do not performe the costly treatments that follow
+
+            # Build intermediary data structure
+            #  it will allow more powerful integrity_tests
+            edge_map = {}  # {position origin, position target: edge}
+            for edge in self.edges:
+                ori, tar = edge.origin_vertex.pos, edge.target_vertex.pos
+                assert (ori, tar) not in edge_map, (
+                    "EE1: Edge {} linking vertices {} and {} is not the first"
+                    " to do so. Edge {} is already doing that."
+                    "".format(edge, edge.origin_vertex, edge.target_vertex, edge_map[ori, tar])
+                )
+                edge_map[ori, tar] = edge
+
+            # edge_map = {}  # {position origin, position target: edge}
+            # for edge in self.edges:
+                # print()
+                # ori, tar = edge.origin_vertex.pos, edge.target_vertex.pos
+                # if (ori, tar) not in edge_map:
+                    # edge_map[ori, tar] = edge
+                # else:
+                    # print('NTNEWN:', ori, tar, str(edge))
+                    # print("There is multiple {}->{} edges.".format(ori, tar))
+                    # edge_map[ori, tar] = (edge_map[ori, tar], edge)
+            # from pprint import pprint
+            # pprint({k: str(v) for k, v in edge_map.items()})
+            # return  # next tests are not yet opened to public ; needs a proper edge_map (only one edge by node combination)
+            for ori in self.vertices:
+                ori = ori.pos
+                for tar in self.vertices:
+                    tar = tar.pos
+                    if (ori, tar) in edge_map:
+                        assert (tar, ori) in edge_map
+                        one, two = edge_map[ori, tar], edge_map[tar, ori]
+                        assert one.opposite_edge == two
+        except Exception as err:
+            logger.exception("Integrity tests found an inconsistency.")
+            raise err
+        else:
+            logger.info("Mesh aggressive integrity test ran with success.")
 
 
     def add(self, obj:object or Vertex, x:int, y:int, search_start:Edge=None):
@@ -341,10 +352,14 @@ class Mesh:
         elif isinstance(face_or_edge_or_vertex, Vertex):
             logger.info("({};{}) is on vertex {}.".format(x, y, face_or_edge_or_vertex))
             vertex = face_or_edge_or_vertex
-            raise ValueError("Can't add a vertex on a vertex.")
+            err = "Can't add a vertex on a vertex."
+            logger.error(err)
+            raise ValueError(err)
         else:
-            raise TypeError("Mesh.object_covering returned an unexpected value"
-                            " {}.".format(face_or_edge_or_vertex))
+            err = ("Mesh.object_covering returned an unexpected value"
+                   " {}.".format(face_or_edge_or_vertex))
+            logger.error(err)
+            raise TypeError(err)
         self._integrity_tests(aggressive=True)
         logger.info("Object {} added with success.".format(obj))
         return obj
