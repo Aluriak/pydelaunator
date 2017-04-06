@@ -103,7 +103,6 @@ class Mesh:
         assert edges[b, d].rot_right_edge == edges[b, a]
         assert edges[b, d].rot_left_edge == edges[b, c]
         assert edges[b, d].left_face == edges[d, b].right_face
-        print(tuple((edge.left_face for edge in edges.values())))
         assert 6 == len(set(edge.left_face for edge in edges.values()))  # exactly 6 faces in whole structure
         # Keep track of all edges, except the ones related to vertex root.
         self._edges = set(edges.values()) - self._outside_objects
