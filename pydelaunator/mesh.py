@@ -313,6 +313,12 @@ class Mesh:
             assert c == cd.origin_vertex
             assert d == da.origin_vertex
 
+            # set their edges
+            ab.origin_vertex.edge = ab
+            bc.origin_vertex.edge = bc
+            cd.origin_vertex.edge = cd
+            da.origin_vertex.edge = da
+
             # modify the AC and CA edges to become the AI and CI edges.
             ai, ia = ac, ca
             del ac, ca
