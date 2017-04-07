@@ -22,6 +22,8 @@ def point_collide_point(ax, ay, bx, by) -> bool:
     return square_distance_between_points(ax, ay, bx, by) < EPSILON
 
 def square_distance_between_segment_and_point(x1, y1, x2, y2, x, y) -> float:
+    if (x1, y1) == (x2, y2):
+        raise ValueError("Segment is defined by two equals coordinates.")
     p1_p2_square_dist = (x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1)
     dotProduct = ((x - x1)*(x2 - x1) + (y - y1)*(y2 - y1)) / p1_p2_square_dist
     if dotProduct < 0:
