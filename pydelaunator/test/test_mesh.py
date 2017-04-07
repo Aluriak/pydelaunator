@@ -27,9 +27,9 @@ def test_mesh_dim(mesh):
 
 def test_mesh_add(mesh):
     mesh.add('one', 10, 10)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as excinfo:
         mesh.add('another at the same place', 10, 10)
-
+    assert str(excinfo.value) == "Can't add a vertex on a vertex."
 
 def test_mesh(mesh):
     assert len(mesh.edges) == 10
@@ -154,3 +154,45 @@ def test_bug_3():
     dt.remove(tee)
     dt.remove(foo)
     dt.remove(one)
+
+
+def test_bug_4():
+    # variation of bug 1, probably
+    # origin: when moving (with changing coords, not delete/add) a vertex
+    #   so its target is exactly on a neighbor. This is not detected until
+    #   for currently unknow reason.
+    # update: this is not the case. The vertex do not move ON the neighbor,
+    #   but in another place around it (move is (0;-2), not (-2;0)),
+    #   invalidating this theory, and explaining the results of
+    #   test_geometry.test_segment_collides_segment_since_bug_4.
+    #   See test_bug_4_variant_1 to get the real (and right) behavior.
+    dt = Mesh(600, 600)
+    added = [
+        dt.add('point', 75, 381),  # 0
+        dt.add('point', 133, 192),  # 1
+        dt.add('point', 249, 574),  # 2
+        dt.add('point', 251, 574),  # 3
+        dt.add('point', 503, 488),  # 4
+        dt.add('point', 528, 209),  # 5
+        dt.add('point', 465, 325),  # 6
+    ]
+    with pytest.raises(AssertionError) as excinfo:
+        dt.move(added[3], 0, -2)
+    assert str(excinfo.value).startswith(('EV3:', 'EV12:'))
+
+def test_bug_4_variant_1():
+    # variation where we put the vertex directly on its neighbor.
+    # works as expected at this point of the project.
+    dt = Mesh(600, 600)
+    added = [
+        dt.add('point', 75, 381),  # 0
+        dt.add('point', 133, 192),  # 1
+        dt.add('point', 249, 574),  # 2
+        dt.add('point', 251, 574),  # 3
+        dt.add('point', 503, 488),  # 4
+        dt.add('point', 528, 209),  # 5
+        dt.add('point', 465, 325),  # 6
+    ]
+    with pytest.raises(ValueError) as excinfo:
+        dt.move(added[3], -2, 0)
+    assert str(excinfo.value) == "Can't add a vertex on a vertex."

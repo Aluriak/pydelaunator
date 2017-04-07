@@ -115,3 +115,33 @@ def test_segment_cross_segment_5():
     assert segment_collides_line(*points) == 1
     assert     segment_collides_segment(*points)
     assert     segment_crosses_segment(*points)
+
+
+def test_segment_collides_segment_since_bug_4():
+    target_coords = (249, 574)
+    neighr_vertex = (249, 574)  # same as target
+    neinei_vertex = ( 75, 381)  # linked to neighr_vertex
+    moving_vertex = (251, 574)
+
+    assert point_collide_segment(*neighr_vertex, *moving_vertex, *target_coords)
+    assert point_collide_segment(*neighr_vertex, *target_coords, *moving_vertex)
+
+    # all combinations are not crossing
+    assert not segment_crosses_segment(neighr_vertex, neinei_vertex,
+                                       moving_vertex, target_coords)
+    assert not segment_crosses_segment(neinei_vertex, neighr_vertex,
+                                       moving_vertex, target_coords)
+    assert not segment_crosses_segment(neinei_vertex, neighr_vertex,
+                                       target_coords, moving_vertex)
+    assert not segment_crosses_segment(neighr_vertex, neinei_vertex,
+                                       target_coords, moving_vertex)
+
+    # but are all colliding
+    assert     segment_collides_segment(neighr_vertex, neinei_vertex,
+                                        moving_vertex, target_coords)
+    assert     segment_collides_segment(neinei_vertex, neighr_vertex,
+                                        moving_vertex, target_coords)
+    assert     segment_collides_segment(neinei_vertex, neighr_vertex,
+                                        target_coords, moving_vertex)
+    assert     segment_collides_segment(neighr_vertex, neinei_vertex,
+                                        target_coords, moving_vertex)
