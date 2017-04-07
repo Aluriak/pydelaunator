@@ -605,7 +605,7 @@ class Mesh:
             t = str(edge.target_vertex.position)
             edges.append((o, t))
         if do_layout:
-            layout = {str(vertex.pos): vertex.pos for vertex in self.vertices}
+            layout = {str(vertex.pos): vertex.pos for vertex in self.corners | self.vertices}
         else:
             layout = None
         commons.draw_digraph(edges, layout)
