@@ -796,7 +796,7 @@ class Mesh:
 
         target = self.corrected_position(mov_vertex.pos[0] + dx,
                                          mov_vertex.pos[1] + dy)
-        if target == mov_vertex.pos:
+        if geometry.point_collide_point(*target, *mov_vertex.pos):
             logger.info("Vertex {} is already at position ({},{}).".format(mov_vertex, *target))
             return
         logger.info("Mesh will move Vertex {} to position ({},{}).".format(mov_vertex, *target))
@@ -807,7 +807,11 @@ class Mesh:
             assert right_vertex is not left_vertex
             assert mov_vertex is not right_vertex
             assert mov_vertex is not left_vertex
-            if geometry.segment_collides_segment(mov_vertex, target, left_vertex, right_vertex):
+            collision = (
+                geometry.segment_collides_segment(mov_vertex, target, left_vertex, right_vertex) or
+                geometry.point_collide_point(*target, *right_vertex)
+            )
+            if collision:
                 # collision with neighbors highly probable : delete and add the vertice
                 logger.info("Mesh will delete Vertex {} and add it to target "
                             "position, because segment vertex/target [{} {}] "
