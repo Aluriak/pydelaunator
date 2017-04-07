@@ -12,6 +12,7 @@ following the habitual mathematical conventions.
 from math import sqrt
 from pydelaunator.commons import sliding
 
+
 EPSILON = 0.01
 
 
@@ -200,15 +201,15 @@ def segment_collides_line(o, p, a, b) -> int:
     AO_x = Ox - Ax
     AO_y = Oy - Ay
     tmp = (AB_x*AP_y - AB_y*AP_x)*(AB_x*AO_y - AB_y*AO_x)
-    if(abs(tmp) < EPSILON):
+    if abs(tmp) < EPSILON:
         return 2  # alignment
-    elif(tmp < 0.):
+    elif tmp < 0.:
         return 1  # cross but no alignement
     return 0  # no collision
 
 
 def segment_collides_segment(a, b, c, d) -> bool:
-    """True if [AB] segment cross with [CD] segment.
+    """True if [AB] segment collides with [CD] segment.
 
     a -- position of a first segment point
     b -- position of another first segment point
@@ -217,8 +218,8 @@ def segment_collides_segment(a, b, c, d) -> bool:
 
     """
     return (
-        bool(segment_collides_line(a, b, c, d)) and
-        bool(segment_collides_line(c, d, a, b))
+        segment_collides_line(a, b, c, d) > 0 and
+        segment_collides_line(c, d, a, b) > 0
     )
 
 
