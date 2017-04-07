@@ -160,18 +160,19 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
                 _delPoint(_getPointAt(*mouse_position))
         elif symbol in (key.V,):
             if choosen_point:
-                choosen_point_speed = None
                 choosen_point = None
+                choosen_point_speed = None
+                choosen_point_accel = None
                 pyglet.clock.unschedule(schedulable_move_choosen_point)
             elif mouse_position:  # not already activated
                 choosen_point = _getPointAt(*mouse_position)
                 if choosen_point:
                     choosen_point_speed = (0, 0)
                     choosen_point_accel = (0, 0)
-                pyglet.clock.schedule_interval(
-                    schedulable_move_choosen_point,
-                    interval=INTERFACE_TIME_SPEED
-                )
+                    pyglet.clock.schedule_interval(
+                        schedulable_move_choosen_point,
+                        interval=INTERFACE_TIME_SPEED
+                    )
         elif choosen_point:
             if symbol == key.LEFT:
                 choosen_point_accel = choosen_point_accel[0] - 1, choosen_point_accel[1]
@@ -255,6 +256,7 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
     ################# POINT FUNCTIONS #################
     def schedulable_move_choosen_point(dt, *args, **kwargs):
         nonlocal choosen_point, choosen_point_speed, choosen_point_accel
+        if not choosen_point:  return
         sx, sy = choosen_point_speed
         ax, ay = choosen_point_accel
         decay = lambda x: max(0, x - 0.1) if x >= 0 else min(0, x + 0.1)
