@@ -492,11 +492,9 @@ class Mesh:
             input('<ok>')
             return False
         if illegal_edge1.constrained:
-            assert not illegal_edge1.opposite_edge.constrained
             assert illegal_edge1.opposite_edge.constrained
             logger.info("Constraigned Edge {} was not flipped.".format(illegal_edge1))
             return False
-        assert illegal_edge1 not in self.outside_objects
         # SHORTCUTS
         illegal_edge2 = illegal_edge1.opposite_edge
         illegal_vertex1 = illegal_edge1.next_left_edge.target_vertex
@@ -511,20 +509,21 @@ class Mesh:
 
 
         # TESTS
-        assert illegal_edge2.opposite_edge == illegal_edge1
-        assert illegal_vertex2 == illegal_edge1.next_right_edge.target_vertex
-        assert illegal_edge1.left_face == illegal_edge2.right_face
-        assert illegal_edge2.left_face == illegal_edge1.right_face
-        assert face1 == illegal_edge2.right_face
-        assert face2 == illegal_edge1.right_face
-        assert edge1_prev.next_left_edge == edge2_next
-        assert edge2_prev.next_left_edge == edge1_next
-        assert edge1_next.target_vertex == illegal_edge1.target_vertex
-        assert edge2_next.target_vertex == illegal_edge2.target_vertex
-        assert illegal_edge1.origin_vertex != illegal_vertex1
-        assert illegal_edge2.origin_vertex != illegal_vertex1
-        assert illegal_edge1.origin_vertex != illegal_vertex2
-        assert illegal_edge2.origin_vertex != illegal_vertex2
+        assert illegal_edge2.opposite_edge is illegal_edge1
+        assert illegal_vertex2 is illegal_edge1.next_right_edge.target_vertex
+        assert illegal_edge1.left_face is illegal_edge2.right_face
+        assert illegal_edge2.left_face is illegal_edge1.right_face
+        assert face1 is not face2
+        assert face1 is illegal_edge2.right_face
+        assert face2 is illegal_edge1.right_face
+        assert edge1_prev.next_left_edge is edge2_next
+        assert edge2_prev.next_left_edge is edge1_next
+        assert edge1_next.target_vertex is illegal_edge1.target_vertex
+        assert edge2_next.target_vertex is illegal_edge2.target_vertex
+        assert illegal_edge1.origin_vertex is not illegal_vertex1
+        assert illegal_edge2.origin_vertex is not illegal_vertex1
+        assert illegal_edge1.origin_vertex is not illegal_vertex2
+        assert illegal_edge2.origin_vertex is not illegal_vertex2
 
         # MODIFICATIONS
         # Origin vertex of illegal edges can't reference illegal edges anymore
@@ -559,6 +558,10 @@ class Mesh:
         assert illegal_edge1.origin_vertex is illegal_vertex1
         assert illegal_edge1.origin_vertex.edge.origin_vertex is illegal_edge1.origin_vertex
         assert illegal_edge1.next_left_edge is illegal_edge2.next_right_edge.next_right_edge.opposite_edge
+        assert illegal_edge1.left_face is illegal_edge2.right_face
+        assert illegal_edge2.left_face is illegal_edge1.right_face
+        assert illegal_edge1.left_face is edge1_next.left_face
+        assert illegal_edge2.left_face is edge2_next.left_face
         assert illegal_edge1.next_left_edge.next_left_edge.next_left_edge is illegal_edge1
         assert illegal_edge1.left_face is face1
         assert illegal_edge1.next_left_edge.left_face is face1
