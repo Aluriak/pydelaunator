@@ -263,7 +263,7 @@ def run(universe_size:tuple=(600, 600), padding:int=50, fps:int=10,
         nodecay = lambda x: x
         choosen_point_speed = decay(sx + ax), decay(sy + ay)
         choosen_point_accel = decay(ax), decay(ay)
-        if choosen_point:
+        if choosen_point and any(choosen_point_speed):
             _movePoint(*choosen_point_speed, choosen_point, log=False)
 
 
