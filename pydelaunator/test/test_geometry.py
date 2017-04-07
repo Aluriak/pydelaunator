@@ -59,6 +59,11 @@ def test_signed_polygon_area_2():
     assert not point_in_clockwise_order(reversed(points))
 
 
+def test_signed_polygon_area_3():
+    points = (0, 1), (0, 0), (1, 1)
+    assert signed_polygon_area(points) == -0.5
+
+
 def test_point_in_circumcircle_of():
     # aligned points
     assert not point_in_circumcircle_of((1,2), (0,2), (3,2), (1,-100))
