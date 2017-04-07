@@ -796,6 +796,9 @@ class Mesh:
 
         target = self.corrected_position(mov_vertex.pos[0] + dx,
                                          mov_vertex.pos[1] + dy)
+        if target == mov_vertex.pos:
+            logger.info("Vertex {} is already at position ({},{}).".format(mov_vertex, *target))
+            return
         logger.info("Mesh will move Vertex {} to position ({},{}).".format(mov_vertex, *target))
         # search for problems
         for edge in mov_vertex.surrounding_edges:
