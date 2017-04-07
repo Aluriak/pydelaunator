@@ -43,9 +43,11 @@ class Vertex:
     @property
     def outgoing_edges(self):
         cur_edge = self._edge
+        assert cur_edge.origin_vertex is self
         yield cur_edge
         cur_edge = cur_edge.rot_left_edge
         while cur_edge != self._edge:
+            assert cur_edge.origin_vertex is self
             yield cur_edge
             cur_edge = cur_edge.rot_left_edge
 
